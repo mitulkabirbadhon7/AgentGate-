@@ -1,5 +1,6 @@
 package com.agentgate.security.config;
 
+import com.agentgate.security.filter.AgentAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -9,10 +10,17 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    private final AgentAuthenticationFilter agentAuthenticationFilter;
+
+    public SecurityConfig(AgentAuthenticationFilter agentAuthenticationFilter) {
+        this.agentAuthenticationFilter = agentAuthenticationFilter;
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -34,8 +42,9 @@ public class SecurityConfig {
                     "/images/**",
                     "/favicon.ico"
                 ).permitAll()
-                .anyRequest().permitAll() // Phase 0 foundation: permits baseline testing; tightened in Phase 1
-            );
+                .anyRequest().permitAll() // Granularly inspected in AgentAuthenticationFilter
+            )
+            .addFilterBefore(agentAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
