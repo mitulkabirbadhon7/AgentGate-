@@ -97,6 +97,27 @@ Status values: NOT_STARTED, IN_PROGRESS, BLOCKED, DONE, VERIFIED.
 - Next task: Phase 1 — Identity and Tool Registry.
 
 ## Session log
+### Session 8 - Deep Code Review & Security Hardening
+- Date: 2026-11-21
+- Phase: 6 (Verification & Hardening)
+- Commit: Pending hardening commit
+- Files changed:
+  - InvocationController.java (New REST endpoint for tool execution)
+  - McpController.java (Wired full governance into tools/call)
+  - ApprovalService.java (Injected RedactionGuard, sanitized downstream outputs, handled write unknown outcomes)
+  - RateLimitService.java (Scope-aware rate limit/quota keys for AGENT and TOOL, write blast-radius enforcement)
+  - RedactionGuard.java (Bangladesh formatted mobile numbers and labeled/standalone NID pattern matching)
+  - InvocationService.java (Terminal lifecycle status & audit on schema validation failure)
+  - GlobalExceptionHandler.java (Optimistic lock conflict handling returning 409 CONFLICT)
+  - AdminWebController.java, killswitches.html, policies.html, style.css (Emergency reset mapping, unauthenticated playground endpoint, modern subtle animation system)
+  - Tests: RedactionGuardTests, RateLimitAndQuotaTests, McpDiscoveryTests, InvocationLifecycleTests, ApprovalStateMachineTests
+- Commands run: ./mvnw.cmd clean verify
+- Actual test/build results: BUILD SUCCESS, 55 tests run, 0 failures, 0 errors, 0 skipped. Production executable JAR repackaged.
+- Decisions/ADR changes: None; strengthened compliance with ADR-0001 through ADR-0008 and security invariants.
+- Remaining risks: Headless Chrome end-to-end rendering for browser UI (DOM & Thymeleaf templates unit-tested).
+- Next task: System ready for deployment and production operation.
+
+## Session log
 Append after each completed work session:
 - Date:
 - Phase:

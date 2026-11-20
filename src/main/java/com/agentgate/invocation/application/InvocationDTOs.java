@@ -11,14 +11,17 @@ import java.util.UUID;
 public class InvocationDTOs {
 
     public record InvokeToolRequest(
-        @NotNull(message = "eventId is required for correlation and idempotency")
         UUID eventId,
 
         @NotBlank(message = "toolName is required")
         String toolName,
 
         Map<String, Object> arguments
-    ) {}
+    ) {
+        public UUID effectiveEventId() {
+            return eventId != null ? eventId : UUID.randomUUID();
+        }
+    }
 
     public record InvocationResponse(
         Long invocationId,

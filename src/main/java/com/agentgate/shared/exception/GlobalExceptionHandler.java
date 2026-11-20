@@ -51,6 +51,19 @@ public class GlobalExceptionHandler {
                 .body(ApiError.of(ErrorCode.VALIDATION_FAILED, "Request argument validation failed", requestId, details));
     }
 
+    @ExceptionHandler({
+        org.springframework.orm.ObjectOptimisticLockingFailureException.class,
+        jakarta.persistence.OptimisticLockException.class
+    })
+    public ResponseEntity<ApiError> handleOptimisticLockException(Exception ex, HttpServletRequest request) {
+        String requestId = resolveRequestId(request);
+        log.warn("Optimistic locking conflict [requestId={}]: {}", requestId, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiError.of(ErrorCode.CONFLICT,
+                        "Concurrent modification detected. The entity was modified by another operation. Please refresh and retry.",
+                        requestId));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGenericException(Exception ex, HttpServletRequest request) {
         String requestId = resolveRequestId(request);

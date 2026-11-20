@@ -159,4 +159,55 @@ class RateLimitAndQuotaTests {
         // Low risk tool invocation should not throw POLICY_STORE_UNREACHABLE
         rateLimitService.enforceLimitsAndQuotas(agent.getClientId(), lowRiskTool, Map.of());
     }
+
+    @Test
+    @DisplayName("Agent-scoped rate limit: limits total agent calls across distinct tools")
+    void testAgentScopedRateLimitEnforcement() {
+        DownstreamServer server = serverRepository.findByName("quota-server-01").orElseThrow();
+        Tool lowRiskTool2 = toolRepository.findByName("quota_low_tool_2")
+                .orElseGet(() -> toolRepository.save(new Tool(server, "quota_low_tool_2", "Low Risk Tool 2", "{\"type\":\"object\"}", RiskLevel.LOW, "GET /low2")));
+
+        rateLimitService.createRateLimit(new RateLimitDTOs.CreateRateLimitRequest(
+                RateLimitPolicy.PolicyScope.AGENT,
+                agent.getClientId(),
+                null,
+                60,
+                2
+        ));
+
+        // Call tool 1 (allowed)
+        rateLimitService.enforceLimitsAndQuotas(agent.getClientId(), lowRiskTool, Map.of());
+        // Call tool 2 (allowed)
+        rateLimitService.enforceLimitsAndQuotas(agent.getClientId(), lowRiskTool2, Map.of());
+
+        // 3rd call by this agent to ANY tool must be blocked
+        assertThatThrownBy(() -> rateLimitService.enforceLimitsAndQuotas(agent.getClientId(), lowRiskTool, Map.of()))
+                .isInstanceOf(AgentGateException.class)
+                .satisfies(ex -> assertThat(((AgentGateException) ex).getErrorCode()).isEqualTo(ErrorCode.RATE_LIMIT_EXCEEDED));
+    }
+
+    @Test
+    @DisplayName("Tool-scoped rate limit: limits total tool calls across distinct calling agents")
+    void testToolScopedRateLimitEnforcement() {
+        AgentClient agent2 = agentRepository.findById("quota-agent-02")
+                .orElseGet(() -> agentRepository.save(new AgentClient("quota-agent-02", "Agent 2", "hash", "Agent 2")));
+
+        rateLimitService.createRateLimit(new RateLimitDTOs.CreateRateLimitRequest(
+                RateLimitPolicy.PolicyScope.TOOL,
+                null,
+                lowRiskTool.getToolId(),
+                60,
+                2
+        ));
+
+        // Agent 1 calls tool (allowed)
+        rateLimitService.enforceLimitsAndQuotas(agent.getClientId(), lowRiskTool, Map.of());
+        // Agent 2 calls tool (allowed)
+        rateLimitService.enforceLimitsAndQuotas(agent2.getClientId(), lowRiskTool, Map.of());
+
+        // 3rd call to this tool by Agent 1 (or any agent) must be blocked
+        assertThatThrownBy(() -> rateLimitService.enforceLimitsAndQuotas(agent.getClientId(), lowRiskTool, Map.of()))
+                .isInstanceOf(AgentGateException.class)
+                .satisfies(ex -> assertThat(((AgentGateException) ex).getErrorCode()).isEqualTo(ErrorCode.RATE_LIMIT_EXCEEDED));
+    }
 }

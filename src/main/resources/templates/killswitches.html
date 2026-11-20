@@ -59,6 +59,7 @@
                             <th>Trigger Reason</th>
                             <th>Triggered By</th>
                             <th>Activated At</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -75,9 +76,18 @@
                             <td th:text="${ks.reason}">Reason</td>
                             <td class="mono" th:text="${ks.adminId}">admin</td>
                             <td th:text="${#temporals.format(ks.activatedAt, 'yyyy-MM-dd HH:mm:ss')}">2026-11-21 00:00:00</td>
+                            <td>
+                                <form th:if="${ks.status.name() == 'ACTIVE'}" th:action="@{/killswitches/reset}" method="post" style="display:inline;">
+                                    <input type="hidden" name="killSwitchId" th:value="${ks.killSwitchId}">
+                                    <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--accent-emerald); border-color: rgba(16, 185, 129, 0.3);">
+                                        Reset Switch
+                                    </button>
+                                </form>
+                                <span th:if="${ks.status.name() != 'ACTIVE'}" style="color: var(--text-muted); font-size: 0.8rem;">Deactivated</span>
+                            </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(killSwitches)}">
-                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">
                                 Gateway in optimal state: 0 kill switches active.
                             </td>
                         </tr>

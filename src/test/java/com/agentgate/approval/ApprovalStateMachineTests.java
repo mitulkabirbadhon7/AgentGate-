@@ -123,4 +123,22 @@ class ApprovalStateMachineTests {
                     assertThat(age.getErrorCode()).isEqualTo(ErrorCode.VALIDATION_FAILED);
                 });
     }
+
+    @Test
+    void concurrentApprovalUpdate_triggersOptimisticLockingFailure() {
+        ApprovalRequest ar = approvalService.createApprovalRequest(testInvocation, "{\"amount\":5000}", 10);
+
+        // Load two independent entity instances representing two browser tabs
+        ApprovalRequest tab1 = approvalRepository.findById(ar.getApprovalId()).orElseThrow();
+        ApprovalRequest tab2 = approvalRepository.findById(ar.getApprovalId()).orElseThrow();
+
+        // Tab 1 updates and saves successfully
+        tab1.setDecisionReason("Updated by Admin Tab 1");
+        approvalRepository.saveAndFlush(tab1);
+
+        // Tab 2 attempts to save stale entity with old version
+        tab2.setDecisionReason("Conflicting update by Admin Tab 2");
+        assertThatThrownBy(() -> approvalRepository.saveAndFlush(tab2))
+                .isInstanceOf(org.springframework.orm.ObjectOptimisticLockingFailureException.class);
+    }
 }

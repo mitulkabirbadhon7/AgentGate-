@@ -1,6 +1,8 @@
 package com.agentgate.tool.api;
 
 import com.agentgate.health.CircuitBreakerHealthManager;
+import com.agentgate.invocation.application.InvocationDTOs;
+import com.agentgate.invocation.application.InvocationService;
 import com.agentgate.security.filter.AgentAuthenticationFilter;
 import com.agentgate.security.principal.SecurityContextSnapshot;
 import com.agentgate.shared.exception.AgentGateException;
@@ -13,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,21 +32,24 @@ public class McpController {
     private final ToolRegistryService toolRegistryService;
     private final ToolRepository toolRepository;
     private final CircuitBreakerHealthManager healthManager;
+    private final InvocationService invocationService;
     private final ObjectMapper objectMapper;
 
     public McpController(ToolRegistryService toolRegistryService, ObjectMapper objectMapper) {
-        this(toolRegistryService, null, null, objectMapper);
+        this(toolRegistryService, null, null, null, objectMapper);
     }
 
-    @org.springframework.beans.factory.annotation.Autowired
+    @Autowired
     public McpController(
             ToolRegistryService toolRegistryService,
-            ToolRepository toolRepository,
-            CircuitBreakerHealthManager healthManager,
+            @Autowired(required = false) ToolRepository toolRepository,
+            @Autowired(required = false) CircuitBreakerHealthManager healthManager,
+            @Autowired(required = false) InvocationService invocationService,
             ObjectMapper objectMapper) {
         this.toolRegistryService = toolRegistryService;
         this.toolRepository = toolRepository;
         this.healthManager = healthManager;
+        this.invocationService = invocationService;
         this.objectMapper = objectMapper;
     }
 
@@ -112,13 +118,55 @@ public class McpController {
                         return ResponseEntity.badRequest().body(createErrorResponse(id, -32602, "Invalid params: 'name' is required"));
                     }
                     String toolName = (String) params.get("name");
-                    ToolDTOs.ToolResponse tool = toolRegistryService.getToolByName(toolName);
+                    Map<String, Object> arguments = (params.get("arguments") instanceof Map<?, ?> argMap)
+                            ? (Map<String, Object>) argMap : Collections.emptyMap();
 
-                    Map<String, Object> contentItem = Map.of(
-                            "type", "text",
-                            "text", "Tool '" + tool.name() + "' executed successfully."
-                    );
-                    return ResponseEntity.ok(createSuccessResponse(id, Map.of("content", List.of(contentItem))));
+                    if (invocationService == null) {
+                        ToolDTOs.ToolResponse tool = toolRegistryService.getToolByName(toolName);
+                        Map<String, Object> contentItem = Map.of(
+                                "type", "text",
+                                "text", "Tool '" + tool.name() + "' executed successfully."
+                        );
+                        return ResponseEntity.ok(createSuccessResponse(id, Map.of("content", List.of(contentItem))));
+                    }
+
+                    SecurityContextSnapshot effectiveContext = securityContext;
+                    if (effectiveContext == null) {
+                        effectiveContext = new SecurityContextSnapshot("mcp-agent-default", null, "STANDARD", Set.of("tools:read", "tools:execute"));
+                    }
+
+                    UUID eventId = UUID.randomUUID();
+                    if (params.containsKey("eventId")) {
+                        try {
+                            eventId = UUID.fromString(params.get("eventId").toString());
+                        } catch (Exception ignored) {}
+                    }
+
+                    InvocationDTOs.InvokeToolRequest invReq = new InvocationDTOs.InvokeToolRequest(eventId, toolName, arguments);
+                    try {
+                        InvocationDTOs.InvocationResponse invResp = invocationService.invokeTool(invReq, effectiveContext);
+                        boolean isError = "BLOCKED".equals(invResp.status()) || "FAILED".equals(invResp.status()) || "UNKNOWN_OUTCOME".equals(invResp.status());
+                        String text = invResp.resultPayload() != null ? invResp.resultPayload()
+                                : ("Tool invocation status: " + invResp.status() + (invResp.errorCode() != null ? " (" + invResp.errorCode() + ")" : ""));
+
+                        Map<String, Object> contentItem = Map.of(
+                                "type", "text",
+                                "text", text
+                        );
+                        return ResponseEntity.ok(createSuccessResponse(id, Map.of(
+                                "content", List.of(contentItem),
+                                "isError", isError
+                        )));
+                    } catch (AgentGateException age) {
+                        Map<String, Object> contentItem = Map.of(
+                                "type", "text",
+                                "text", "Governance Error [" + age.getErrorCode() + "]: " + age.getMessage()
+                        );
+                        return ResponseEntity.ok(createSuccessResponse(id, Map.of(
+                                "content", List.of(contentItem),
+                                "isError", true
+                        )));
+                    }
                 }
 
                 default -> {

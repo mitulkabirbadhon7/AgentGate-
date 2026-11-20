@@ -82,6 +82,7 @@ public class RateLimitService {
 
         enforceRateLimits(agentId, tool);
         enforceDailyQuota(agentId, tool);
+        enforceWriteBlastRadius(agentId, tool);
     }
 
     private void handleRedisOutage(Tool tool) {
@@ -98,7 +99,7 @@ public class RateLimitService {
         long nowSec = System.currentTimeMillis() / 1000;
 
         for (RateLimitPolicy policy : policies) {
-            String key = "rl:" + policy.getScope() + ":" + agentId + ":" + tool.getToolId();
+            String key = buildRateLimitKey(policy, agentId, tool);
             
             long currentCount;
             if (redisTemplate != null && !simulateRedisOutage) {
@@ -127,6 +128,57 @@ public class RateLimitService {
         }
     }
 
+    private String buildRateLimitKey(RateLimitPolicy policy, String agentId, Tool tool) {
+        String base = switch (policy.getScope()) {
+            case AGENT -> "rl:AGENT:" + agentId;
+            case TOOL -> "rl:TOOL:" + tool.getToolId();
+            case AGENT_TOOL -> "rl:AGENT_TOOL:" + agentId + ":" + tool.getToolId();
+        };
+        return (policy.getRateLimitId() != null) ? (base + ":" + policy.getRateLimitId()) : base;
+    }
+
+    private void enforceWriteBlastRadius(String agentId, Tool tool) {
+        if (tool == null) return;
+        boolean isWrite = isWriteTool(tool);
+        if (!isWrite && tool.getRiskLevel() != RiskLevel.HIGH) {
+            return;
+        }
+
+        // Enforce write blast-radius burst cap: max 30 state-changing calls per 10 seconds per agent
+        int burstWindowSec = 10;
+        int maxBurstWrites = 30;
+        String key = "blast:" + agentId + ":writes";
+        long nowSec = System.currentTimeMillis() / 1000;
+
+        long currentCount;
+        if (redisTemplate != null && !simulateRedisOutage) {
+            try {
+                Long val = redisTemplate.opsForValue().increment(key);
+                if (val != null && val == 1L) {
+                    redisTemplate.expire(key, Duration.ofSeconds(burstWindowSec));
+                }
+                currentCount = val != null ? val : 1L;
+            } catch (Exception ex) {
+                currentCount = incrementLocalCounter(key, nowSec, burstWindowSec);
+            }
+        } else {
+            currentCount = incrementLocalCounter(key, nowSec, burstWindowSec);
+        }
+
+        if (currentCount > maxBurstWrites) {
+            alertService.recordSecurityAlert("BLAST_RADIUS_BREACH", "CRITICAL", agentId,
+                    "Write blast-radius cap exceeded for agent " + agentId + " attempting write on " + tool.getName()
+                            + ". Burst limit: " + maxBurstWrites + " writes per " + burstWindowSec + "s.");
+            throw new AgentGateException(ErrorCode.RATE_LIMIT_EXCEEDED,
+                    "Write blast-radius cap exceeded: excessive state-changing operations within burst window (" + maxBurstWrites + " ops/" + burstWindowSec + "s)");
+        }
+    }
+
+    private boolean isWriteTool(Tool tool) {
+        String hint = tool.getRoutingHint() != null ? tool.getRoutingHint().toUpperCase() : "";
+        return hint.startsWith("POST") || hint.startsWith("PUT") || hint.startsWith("DELETE") || hint.startsWith("PATCH");
+    }
+
     private long incrementLocalCounter(String key, long nowSec, int windowSeconds) {
         WindowCounter counter = rateLimitCounters.compute(key, (k, existing) -> {
             if (existing == null || nowSec - existing.windowStartEpochSec >= windowSeconds) {
@@ -143,7 +195,7 @@ public class RateLimitService {
         String todayUtc = LocalDate.now(ZoneOffset.UTC).toString();
 
         for (QuotaPolicy quota : quotas) {
-            String key = "quota:" + quota.getScope() + ":" + agentId + ":" + tool.getToolId() + ":" + todayUtc;
+            String key = buildQuotaKey(quota, agentId, tool, todayUtc);
             
             long currentUsage;
             if (redisTemplate != null && !simulateRedisOutage) {
@@ -172,6 +224,16 @@ public class RateLimitService {
                         "Daily quota exceeded for UTC date " + todayUtc + ": maximum " + quota.getMaxAmount() + " operations per day");
             }
         }
+    }
+
+    private String buildQuotaKey(QuotaPolicy quota, String agentId, Tool tool, String todayUtc) {
+        String base = switch (quota.getScope()) {
+            case AGENT -> "quota:AGENT:" + agentId;
+            case TOOL -> "quota:TOOL:" + tool.getToolId();
+            case AGENT_TOOL -> "quota:AGENT_TOOL:" + agentId + ":" + tool.getToolId();
+        };
+        String policySuffix = (quota.getQuotaId() != null) ? (":" + quota.getQuotaId()) : "";
+        return base + policySuffix + ":" + todayUtc;
     }
 
     @Transactional

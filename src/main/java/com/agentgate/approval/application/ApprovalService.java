@@ -4,12 +4,14 @@ import com.agentgate.approval.domain.ApprovalRequest;
 import com.agentgate.approval.infrastructure.ApprovalRequestRepository;
 import com.agentgate.audit.application.AuditChainService;
 import com.agentgate.invocation.domain.ToolInvocation;
+import com.agentgate.invocation.guard.RedactionGuard;
 import com.agentgate.invocation.guard.SchemaValidationGuard;
 import com.agentgate.invocation.infrastructure.ToolInvocationRepository;
 import com.agentgate.killswitch.application.KillSwitchService;
 import com.agentgate.outbox.application.OutboxService;
 import com.agentgate.policy.application.PolicyDTOs;
 import com.agentgate.policy.application.PolicyService;
+import com.agentgate.security.principal.SecurityContextSnapshot;
 import com.agentgate.shared.api.ErrorCode;
 import com.agentgate.shared.exception.AgentGateException;
 import com.agentgate.tool.adapter.ToolAdapter;
@@ -28,6 +30,7 @@ import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class ApprovalService {
@@ -37,6 +40,7 @@ public class ApprovalService {
     private final ApprovalRequestRepository approvalRepository;
     private final ToolInvocationRepository invocationRepository;
     private final SchemaValidationGuard schemaValidationGuard;
+    private final RedactionGuard redactionGuard;
     private final PolicyService policyService;
     private final KillSwitchService killSwitchService;
     private final AuditChainService auditChainService;
@@ -48,6 +52,7 @@ public class ApprovalService {
             ApprovalRequestRepository approvalRepository,
             ToolInvocationRepository invocationRepository,
             SchemaValidationGuard schemaValidationGuard,
+            RedactionGuard redactionGuard,
             PolicyService policyService,
             KillSwitchService killSwitchService,
             AuditChainService auditChainService,
@@ -57,6 +62,7 @@ public class ApprovalService {
         this.approvalRepository = approvalRepository;
         this.invocationRepository = invocationRepository;
         this.schemaValidationGuard = schemaValidationGuard;
+        this.redactionGuard = redactionGuard;
         this.policyService = policyService;
         this.killSwitchService = killSwitchService;
         this.auditChainService = auditChainService;
@@ -201,24 +207,46 @@ public class ApprovalService {
         try {
             Map<String, Object> args = objectMapper.readValue(argsJson, new TypeReference<Map<String, Object>>() {});
             long start = System.currentTimeMillis();
-            String result = adapter.execute(tool, args, null).join();
+            SecurityContextSnapshot securityContext = new SecurityContextSnapshot(
+                    approverId != null ? approverId : "admin_user",
+                    null,
+                    "ADMIN",
+                    Set.of("tools:read", "tools:execute", "admin")
+            );
+            String result = adapter.execute(tool, args, securityContext).join();
             long latency = System.currentTimeMillis() - start;
 
+            String sanitized = redactionGuard.enforceTruncation(redactionGuard.redactSensitiveData(result));
+
             invocation.setStatus(ToolInvocation.InvocationStatus.EXECUTED);
-            invocation.setResponsePayloadRedacted(result);
+            invocation.setResponsePayloadRedacted(sanitized);
             invocation.setLatencyMs((int) latency);
             invocation.setCompletedAt(Instant.now());
             invocationRepository.save(invocation);
 
-            auditChainService.appendAuditEvent(invocation, "APPROVED_AND_EXECUTED", result, approverId);
-            outboxService.publishEvent("tool.invocation.approved", "APPROVED", result, invocation.getAgent().getClientId());
+            auditChainService.appendAuditEvent(invocation, "APPROVED_AND_EXECUTED", sanitized, approverId);
+            outboxService.publishEvent("tool.invocation.approved", "APPROVED", sanitized, invocation.getAgent().getClientId());
         } catch (Exception e) {
             log.error("Failed downstream execution for approved invocation: {}", invocation.getInvocationId(), e);
-            invocation.setStatus(ToolInvocation.InvocationStatus.FAILED);
+            boolean isWrite = isWriteOperation(tool);
+            ToolInvocation.InvocationStatus failureStatus = isWrite
+                    ? ToolInvocation.InvocationStatus.UNKNOWN_OUTCOME
+                    : ToolInvocation.InvocationStatus.FAILED;
+
+            invocation.setStatus(failureStatus);
             invocation.setErrorCode(ErrorCode.DOWNSTREAM_TIMEOUT.name());
             invocation.setCompletedAt(Instant.now());
             invocationRepository.save(invocation);
+
+            auditChainService.appendAuditEvent(invocation, failureStatus.name(), "{\"error\":\"" + e.getMessage() + "\"}", approverId);
+            outboxService.publishEvent("tool.invocation.failed", failureStatus.name(), "{\"error\":\"" + e.getMessage() + "\"}", invocation.getAgent().getClientId());
         }
+    }
+
+    private boolean isWriteOperation(Tool tool) {
+        if (tool == null) return false;
+        String hint = tool.getRoutingHint() != null ? tool.getRoutingHint().toUpperCase() : "";
+        return hint.startsWith("POST") || hint.startsWith("PUT") || hint.startsWith("DELETE") || hint.startsWith("PATCH");
     }
 
     private String computeSha256(String input) {

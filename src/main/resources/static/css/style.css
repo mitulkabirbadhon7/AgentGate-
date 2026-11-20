@@ -476,3 +476,53 @@ textarea.form-control {
   grid-template-columns: 1fr 1fr;
   gap: 24px;
 }
+
+/* Modern Animations & Micro-Interactions */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel, .kpi-card {
+  animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.nav-item a {
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background 0.18s ease, color 0.18s ease;
+}
+
+.nav-item a:hover {
+  transform: translateX(4px);
+}
+
+.chip {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.chip:hover {
+  transform: scale(1.04);
+}
+
+.data-table tbody tr {
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.data-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+/* Danger Switch Glow */
+@keyframes danger-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(244, 63, 94, 0); }
+  50% { box-shadow: 0 0 16px rgba(244, 63, 94, 0.35); }
+}
+
+.chip-rose.active-pulse {
+  animation: danger-pulse 2s infinite ease-in-out;
+}

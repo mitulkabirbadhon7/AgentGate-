@@ -149,7 +149,7 @@ function runSimulation() {
         dryRun: true
     };
 
-    fetch('/api/v1/policies/playground/evaluate', {
+    fetch('/policies/playground/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

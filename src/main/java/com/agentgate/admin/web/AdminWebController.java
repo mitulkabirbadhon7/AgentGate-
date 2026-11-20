@@ -14,20 +14,25 @@ import com.agentgate.killswitch.application.KillSwitchDTOs;
 import com.agentgate.killswitch.application.KillSwitchService;
 import com.agentgate.killswitch.domain.KillSwitch;
 import com.agentgate.killswitch.infrastructure.KillSwitchRepository;
+import com.agentgate.policy.application.PolicyDTOs;
 import com.agentgate.policy.application.PolicyService;
 import com.agentgate.policy.infrastructure.PolicyBindingRepository;
 import com.agentgate.policy.infrastructure.PolicyRepository;
+import com.agentgate.shared.api.ApiResponse;
 import com.agentgate.tool.infrastructure.DownstreamServerRepository;
 import com.agentgate.tool.infrastructure.ToolRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 import java.util.Map;
@@ -198,5 +203,21 @@ public class AdminWebController {
                 "admin_user"
         ));
         return "redirect:/killswitches";
+    }
+
+    @PostMapping("/killswitches/reset")
+    public String resetKillSwitch(
+            @RequestParam Long killSwitchId,
+            @RequestParam(required = false) String reason) {
+        killSwitchService.resetKillSwitch(killSwitchId, "admin_user");
+        return "redirect:/killswitches";
+    }
+
+    @PostMapping("/policies/playground/evaluate")
+    @ResponseBody
+    public ResponseEntity<ApiResponse<PolicyDTOs.EvaluationResult>> evaluatePlayground(
+            @RequestBody PolicyDTOs.EvaluationRequest request) {
+        PolicyDTOs.EvaluationResult result = policyService.evaluate(request);
+        return ResponseEntity.ok(ApiResponse.ok(result));
     }
 }

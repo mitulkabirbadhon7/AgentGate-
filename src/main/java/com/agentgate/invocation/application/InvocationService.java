@@ -98,10 +98,12 @@ public class InvocationService {
             InvocationDTOs.InvokeToolRequest request,
             SecurityContextSnapshot securityContext) {
 
+        UUID effectiveEventId = request.effectiveEventId();
+
         // 1. Idempotency Check
-        Optional<ToolInvocation> existing = invocationRepository.findByEventId(request.eventId());
+        Optional<ToolInvocation> existing = invocationRepository.findByEventId(effectiveEventId);
         if (existing.isPresent()) {
-            log.info("Idempotent invocation replay detected for eventId: {}", request.eventId());
+            log.info("Idempotent invocation replay detected for eventId: {}", effectiveEventId);
             return InvocationDTOs.InvocationResponse.from(existing.get());
         }
 
@@ -139,7 +141,7 @@ public class InvocationService {
 
         // 5. Initial Invocation State
         ToolInvocation invocation = new ToolInvocation(
-                request.eventId(),
+                effectiveEventId,
                 agent,
                 user,
                 tool,
@@ -152,7 +154,22 @@ public class InvocationService {
         auditChainService.appendAuditEvent(invocation, "INVOCATION_RECEIVED", redactedArgs, agent.getClientId());
 
         // 7. Schema Validation Guard
-        schemaValidationGuard.validateAndNormalize(tool, request.arguments());
+        try {
+            schemaValidationGuard.validateAndNormalize(tool, request.arguments());
+        } catch (AgentGateException ex) {
+            invocation.setStatus(ToolInvocation.InvocationStatus.BLOCKED);
+            invocation.setErrorCode(ex.getErrorCode().name());
+            invocation.setCompletedAt(Instant.now());
+            invocationRepository.save(invocation);
+
+            auditChainService.appendAuditEvent(invocation, "BLOCKED_SCHEMA_VALIDATION",
+                    "{\"error\":\"" + ex.getMessage().replace("\"", "\\\"") + "\"}", "schema_guard");
+            outboxService.publishEvent("tool.invocation.blocked", "BLOCKED", redactedArgs, agent.getClientId());
+            if (metricsService != null) {
+                metricsService.recordInvocation(tool.getName(), agent.getClientId(), "BLOCKED", 0);
+            }
+            throw ex;
+        }
 
         // 8. Policy Evaluation
         PolicyDTOs.EvaluationRequest evalReq = new PolicyDTOs.EvaluationRequest(
