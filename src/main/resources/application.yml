@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: agentgate
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/agentgate}
+    username: ${SPRING_DATASOURCE_USERNAME:agentgate_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:agentgate_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: 2000ms
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+
+agentgate:
+  security:
+    jwt:
+      issuer: ${AGENTGATE_JWT_ISSUER:https://auth.agentgate.local}
+      audience: ${AGENTGATE_JWT_AUDIENCE:agentgate-core}
+      secret-key: ${AGENTGATE_JWT_SECRET:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef}
+    admin:
+      username: ${ADMIN_USERNAME:admin}
+      password: ${ADMIN_PASSWORD:admin_gate_change_me}
+  resilience:
+    default-timeout-ms: 5000
+    circuit-breaker:
+      sliding-window-size: 10
+      failure-rate-threshold: 50.0
+      wait-duration-in-open-state-seconds: 10
