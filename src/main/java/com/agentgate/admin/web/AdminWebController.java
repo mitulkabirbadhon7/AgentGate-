@@ -86,7 +86,7 @@ public class AdminWebController {
         this.objectMapper = objectMapper;
     }
 
-    @GetMapping({"/", "/dashboard"})
+    @GetMapping({"/", "/dashboard", "/admin"})
     public String dashboard(Model model) {
         long agentCount = agentRepository.count();
         long toolCount = toolRepository.count();

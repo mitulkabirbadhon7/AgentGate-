@@ -33,6 +33,9 @@ venv/
 # Java & Maven Build
 target/
 build/
+data/
+*.mv.db
+*.trace.db
 *.class
 *.jar
 *.war
