@@ -16,7 +16,7 @@ Status values: NOT_STARTED, IN_PROGRESS, BLOCKED, DONE, VERIFIED.
 ### Session 1 - Phase 0 Completion
 - Date: 2026-11-21
 - Phase: 0
-- Commit: Pending Phase 0 commit
+- Commit: 8b5124a826e246e24b9c6da562cf7cf024fbe2bb
 - Files changed: pom.xml, docker-compose.yml, .env.example, .github/workflows/ci.yml, V1__baseline_schema.sql, application.yml, application-test.yml, AgentGateApplication.java, ApiResponse.java, ApiError.java, ErrorCode.java, AgentGateException.java, GlobalExceptionHandler.java, SecurityConfig.java, AgentGateApplicationTests.java, 8 ADRs.
 - Commands run: mvn test
 - Actual test/build results: BUILD SUCCESS, Tests run: 1, Failures: 0, Errors: 0, Skipped: 0.

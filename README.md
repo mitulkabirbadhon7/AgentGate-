@@ -673,7 +673,9 @@ Access the endpoints:
 
 ## 📚 Documentation & ADRs
 
-Detailed technical specifications and design rationale are available in the [`docs/`](docs/) directory:
+Detailed technical specifications, functional requirements, and architecture design rationale are available in the [`docs/`](docs/) directory:
+- 📄 [Product Requirements Document (PRD)](docs/PRD.md)
+- ⚙️ [Technical Requirements Document (TRD)](docs/TRD.md)
 - 🏛️ [Architecture Baseline & Invariants](docs/ARCHITECTURE.md)
 - 🗄️ [Data Model & Migration Semantics](docs/DATA_MODEL.md)
 - 🔐 [Security Controls & SSRF Defense](docs/SECURITY.md)
@@ -681,6 +683,7 @@ Detailed technical specifications and design rationale are available in the [`do
 - 🧪 [Testing Strategy & Acceptance Benchmarks](docs/TESTING.md)
 - 🧠 [Durable Project Memory](docs/MEMORY.md)
 - 📈 [Implementation Tracker](docs/IMPLEMENTATION_TRACKER.md)
+- 📑 [Architecture Decision Records (ADRs)](docs/adr/)
 
 ---
 
