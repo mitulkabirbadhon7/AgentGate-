@@ -1,0 +1,21 @@
+# AgentGate — Security Invariants
+
+- OAuth2 Resource Server validates signature/introspection, issuer, audience, expiry and scopes.
+- Agent identity comes from authenticated token claims, never request-supplied agent IDs.
+- On-behalf-of user comes only from a verified claim/trusted token exchange.
+- Default deny; no applicable allow means deny.
+- Tool arguments validated against registered JSON Schema.
+- Policy version pinned to each invocation.
+- Kill switch checked before side effects; sensitive writes need sufficiently fresh state.
+- Approval bound to invocation ID and exact argument digest.
+- Edited arguments are schema-validated and policy/kill-switch/quota checked again.
+- Rate limits, daily quotas and write blast-radius limits are enforced atomically.
+- Results redacted for email, Bangladesh phone and NID patterns before return.
+- Oversized results truncated with explicit notice.
+- Downstream calls use allowlisted endpoints, timeouts and circuit breakers.
+- OpenAPI import must defend against SSRF: validate scheme, DNS/IP ranges, redirects and private/link-local destinations; require admin authorization.
+- Webhook delivery must defend against SSRF, replay and secret leakage.
+- No raw secrets or sensitive payloads in logs, metrics labels or outbox payloads.
+- Redis Pub/Sub is not durable; use TTL/version/authoritative checks.
+- Audit events append-only, with DB privileges restricting update/delete.
+- Define fail-closed behavior for policy DB, Redis, audit persistence and downstream uncertainty.
