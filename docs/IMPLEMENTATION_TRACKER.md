@@ -8,9 +8,21 @@ Status values: NOT_STARTED, IN_PROGRESS, BLOCKED, DONE, VERIFIED.
 | 1 | OAuth2 identity, agent registry, server/tool registry, OpenAPI import, MCP discovery | DONE | TokenService, AgentAuthFilter, SSRF defense, MCP discovery, 17 tests passed |
 | 2 | JSON Schema, policy versions/bindings, default deny, dry-run, playground, cache | DONE | SchemaValidationGuard, PolicyEvaluator, PolicyCacheService, PolicyAdminController, 23 tests passed |
 | 3 | Invocation lifecycle, audit chain, search/export, verification, idempotency | DONE | ToolInvocation, AuditChainService, EventPublication, InvocationService, AuditAdminController, 27 tests passed |
-| 4 | Approval state machine, notifications, kill switches | NOT_STARTED | Approve/reject/edit/expiry/cancel tests |
+| 4 | Approval state machine, notifications, kill switches | DONE | ApprovalRequest, KillSwitch, ApprovalService, KillSwitchService, KillSwitchGuard, 31 tests passed |
 | 5 | Rate limits, quotas, redaction, resilience and outage behavior | NOT_STARTED | QA4/fault injection and FR5/FR6/FR10 tests |
 | 6 | Admin UX, observability, load/security tests, demo | NOT_STARTED | QA1–QA5 evidence and final demo |
+
+## Session log
+### Session 5 - Phase 4 Completion
+- Date: 2026-11-21
+- Phase: 4
+- Commit: Pending Phase 4 commit
+- Files changed: ApprovalRequest, KillSwitch entities & repositories; ApprovalService, KillSwitchService, KillSwitchGuard, ApprovalAdminController, KillSwitchAdminController; ApprovalStateMachineTests, KillSwitchEnforcementTests.
+- Commands run: mvn test
+- Actual test/build results: BUILD SUCCESS, Tests run: 31, Failures: 0, Errors: 0, Skipped: 0.
+- Decisions/ADR changes: Followed ADR-0006 for approval argument digests and ADR-0007 for kill switch mirror freshness.
+- Remaining risks: None.
+- Next task: Phase 5 — Limits, Redaction and Resilience.
 
 ## Session log
 ### Session 4 - Phase 3 Completion
