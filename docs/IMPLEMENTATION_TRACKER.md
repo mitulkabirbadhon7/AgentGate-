@@ -9,8 +9,20 @@ Status values: NOT_STARTED, IN_PROGRESS, BLOCKED, DONE, VERIFIED.
 | 2 | JSON Schema, policy versions/bindings, default deny, dry-run, playground, cache | DONE | SchemaValidationGuard, PolicyEvaluator, PolicyCacheService, PolicyAdminController, 23 tests passed |
 | 3 | Invocation lifecycle, audit chain, search/export, verification, idempotency | DONE | ToolInvocation, AuditChainService, EventPublication, InvocationService, AuditAdminController, 27 tests passed |
 | 4 | Approval state machine, notifications, kill switches | DONE | ApprovalRequest, KillSwitch, ApprovalService, KillSwitchService, KillSwitchGuard, 31 tests passed |
-| 5 | Rate limits, quotas, redaction, resilience and outage behavior | NOT_STARTED | QA4/fault injection and FR5/FR6/FR10 tests |
+| 5 | Rate limits, quotas, redaction, resilience and outage behavior | DONE | Sliding window limits, UTC daily quotas, Redis outage fail-closed, RedactionGuard, CircuitBreakerHealthManager, 44 tests passed |
 | 6 | Admin UX, observability, load/security tests, demo | NOT_STARTED | QA1–QA5 evidence and final demo |
+
+## Session log
+### Session 6 - Phase 5 Completion
+- Date: 2026-11-21
+- Phase: 5
+- Commit: Pending Phase 5 commit
+- Files changed: RateLimitPolicy, QuotaPolicy, SecurityAlert entities & repositories; SecurityAlertService, RateLimitService, RedactionGuard, CircuitBreakerHealthManager, QuotaAdminController; RedactionGuardTests, RateLimitAndQuotaTests, CircuitBreakerResilienceTests.
+- Commands run: mvn test
+- Actual test/build results: BUILD SUCCESS, Tests run: 44, Failures: 0, Errors: 0, Skipped: 0.
+- Decisions/ADR changes: Followed ADR-0007 for Redis resilience and fail-closed outage semantics on Medium/High risk tools.
+- Remaining risks: None.
+- Next task: Phase 6 — Admin UI, Observability, and Acceptance Evidence.
 
 ## Session log
 ### Session 5 - Phase 4 Completion

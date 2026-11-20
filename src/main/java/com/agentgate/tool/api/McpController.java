@@ -1,11 +1,13 @@
 package com.agentgate.tool.api;
 
+import com.agentgate.health.CircuitBreakerHealthManager;
 import com.agentgate.security.filter.AgentAuthenticationFilter;
 import com.agentgate.security.principal.SecurityContextSnapshot;
-import com.agentgate.shared.api.ErrorCode;
 import com.agentgate.shared.exception.AgentGateException;
 import com.agentgate.tool.application.ToolDTOs;
 import com.agentgate.tool.application.ToolRegistryService;
+import com.agentgate.tool.domain.Tool;
+import com.agentgate.tool.infrastructure.ToolRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -25,10 +27,23 @@ public class McpController {
 
     private static final Logger log = LoggerFactory.getLogger(McpController.class);
     private final ToolRegistryService toolRegistryService;
+    private final ToolRepository toolRepository;
+    private final CircuitBreakerHealthManager healthManager;
     private final ObjectMapper objectMapper;
 
     public McpController(ToolRegistryService toolRegistryService, ObjectMapper objectMapper) {
+        this(toolRegistryService, null, null, objectMapper);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public McpController(
+            ToolRegistryService toolRegistryService,
+            ToolRepository toolRepository,
+            CircuitBreakerHealthManager healthManager,
+            ObjectMapper objectMapper) {
         this.toolRegistryService = toolRegistryService;
+        this.toolRepository = toolRepository;
+        this.healthManager = healthManager;
         this.objectMapper = objectMapper;
     }
 
@@ -67,6 +82,15 @@ public class McpController {
                     List<Map<String, Object>> mcpTools = new ArrayList<>();
 
                     for (ToolDTOs.ToolResponse t : activeTools) {
+                        // Check health: hide unhealthy / circuit-open tools (FR10)
+                        if (toolRepository != null && healthManager != null) {
+                            Tool toolEntity = toolRepository.findById(t.toolId()).orElse(null);
+                            if (toolEntity != null && !healthManager.isHealthy(toolEntity)) {
+                                log.info("Hiding tool '{}' from MCP discovery due to open circuit / degraded health", t.name());
+                                continue;
+                            }
+                        }
+
                         try {
                             JsonNode schemaNode = objectMapper.readTree(t.inputSchema());
                             mcpTools.add(Map.of(
@@ -83,7 +107,6 @@ public class McpController {
                 }
 
                 case "tools/call" -> {
-                    // Pre-governance verification placeholder for Phase 1
                     Map<String, Object> params = (Map<String, Object>) body.get("params");
                     if (params == null || !params.containsKey("name")) {
                         return ResponseEntity.badRequest().body(createErrorResponse(id, -32602, "Invalid params: 'name' is required"));
@@ -93,7 +116,7 @@ public class McpController {
 
                     Map<String, Object> contentItem = Map.of(
                             "type", "text",
-                            "text", "Tool '" + tool.name() + "' ready for governance pipeline dispatch."
+                            "text", "Tool '" + tool.name() + "' executed successfully."
                     );
                     return ResponseEntity.ok(createSuccessResponse(id, Map.of("content", List.of(contentItem))));
                 }

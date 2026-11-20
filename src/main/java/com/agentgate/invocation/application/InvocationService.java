@@ -6,13 +6,16 @@ import com.agentgate.agent.infrastructure.AgentClientRepository;
 import com.agentgate.agent.infrastructure.EndUserRepository;
 import com.agentgate.approval.application.ApprovalService;
 import com.agentgate.audit.application.AuditChainService;
+import com.agentgate.health.CircuitBreakerHealthManager;
 import com.agentgate.invocation.domain.ToolInvocation;
 import com.agentgate.invocation.guard.KillSwitchGuard;
+import com.agentgate.invocation.guard.RedactionGuard;
 import com.agentgate.invocation.guard.SchemaValidationGuard;
 import com.agentgate.invocation.infrastructure.ToolInvocationRepository;
 import com.agentgate.outbox.application.OutboxService;
 import com.agentgate.policy.application.PolicyDTOs;
 import com.agentgate.policy.application.PolicyService;
+import com.agentgate.quota.application.RateLimitService;
 import com.agentgate.security.principal.SecurityContextSnapshot;
 import com.agentgate.shared.api.ErrorCode;
 import com.agentgate.shared.exception.AgentGateException;
@@ -45,6 +48,9 @@ public class InvocationService {
     private final KillSwitchGuard killSwitchGuard;
     private final PolicyService policyService;
     private final ApprovalService approvalService;
+    private final RateLimitService rateLimitService;
+    private final CircuitBreakerHealthManager healthManager;
+    private final RedactionGuard redactionGuard;
     private final AuditChainService auditChainService;
     private final OutboxService outboxService;
     private final List<ToolAdapter> toolAdapters;
@@ -59,6 +65,9 @@ public class InvocationService {
             KillSwitchGuard killSwitchGuard,
             PolicyService policyService,
             @Lazy ApprovalService approvalService,
+            RateLimitService rateLimitService,
+            CircuitBreakerHealthManager healthManager,
+            RedactionGuard redactionGuard,
             AuditChainService auditChainService,
             OutboxService outboxService,
             List<ToolAdapter> toolAdapters,
@@ -71,13 +80,16 @@ public class InvocationService {
         this.killSwitchGuard = killSwitchGuard;
         this.policyService = policyService;
         this.approvalService = approvalService;
+        this.rateLimitService = rateLimitService;
+        this.healthManager = healthManager;
+        this.redactionGuard = redactionGuard;
         this.auditChainService = auditChainService;
         this.outboxService = outboxService;
         this.toolAdapters = toolAdapters;
         this.objectMapper = objectMapper;
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = AgentGateException.class)
     public InvocationDTOs.InvocationResponse invokeTool(
             InvocationDTOs.InvokeToolRequest request,
             SecurityContextSnapshot securityContext) {
@@ -104,8 +116,14 @@ public class InvocationService {
             throw new AgentGateException(ErrorCode.FORBIDDEN, "Tool is not active: " + tool.getStatus());
         }
 
-        // 2. Kill Switch Guard (pre-check)
+        // 2. Circuit Breaker check
+        healthManager.verifyExecutionPermitted(tool);
+
+        // 3. Kill Switch Guard (pre-check)
         killSwitchGuard.checkKillSwitch(agent.getClientId(), tool);
+
+        // 4. Rate Limits & Quotas
+        rateLimitService.enforceLimitsAndQuotas(agent.getClientId(), tool, request.arguments());
 
         String rawArgsJson;
         try {
@@ -113,25 +131,26 @@ public class InvocationService {
         } catch (Exception e) {
             rawArgsJson = "{}";
         }
+        String redactedArgs = redactionGuard.redactSensitiveData(rawArgsJson);
 
-        // 3. Initial Invocation State
+        // 5. Initial Invocation State
         ToolInvocation invocation = new ToolInvocation(
                 request.eventId(),
                 agent,
                 user,
                 tool,
-                rawArgsJson,
+                redactedArgs,
                 ToolInvocation.InvocationStatus.RECEIVED
         );
         invocation = invocationRepository.save(invocation);
 
-        // 4. Audit INVOCATION_RECEIVED
-        auditChainService.appendAuditEvent(invocation, "INVOCATION_RECEIVED", rawArgsJson, agent.getClientId());
+        // 6. Audit INVOCATION_RECEIVED
+        auditChainService.appendAuditEvent(invocation, "INVOCATION_RECEIVED", redactedArgs, agent.getClientId());
 
-        // 5. Schema Validation Guard
+        // 7. Schema Validation Guard
         schemaValidationGuard.validateAndNormalize(tool, request.arguments());
 
-        // 6. Policy Evaluation
+        // 8. Policy Evaluation
         PolicyDTOs.EvaluationRequest evalReq = new PolicyDTOs.EvaluationRequest(
                 agent.getClientId(),
                 tool.getToolId(),
@@ -151,7 +170,7 @@ public class InvocationService {
             invocationRepository.save(invocation);
 
             auditChainService.appendAuditEvent(invocation, "BLOCKED", "{\"reason\":\"" + evalResult.reason() + "\"}", "policy_engine");
-            outboxService.publishEvent("tool.invocation.blocked", "BLOCKED", rawArgsJson, agent.getClientId());
+            outboxService.publishEvent("tool.invocation.blocked", "BLOCKED", redactedArgs, agent.getClientId());
 
             return InvocationDTOs.InvocationResponse.from(invocation);
         }
@@ -163,7 +182,7 @@ public class InvocationService {
             approvalService.createApprovalRequest(invocation, rawArgsJson, 15);
 
             auditChainService.appendAuditEvent(invocation, "APPROVAL_PENDING", "{\"reason\":\"" + evalResult.reason() + "\"}", "policy_engine");
-            outboxService.publishEvent("tool.invocation.approval_required", "APPROVAL_PENDING", rawArgsJson, agent.getClientId());
+            outboxService.publishEvent("tool.invocation.approval_required", "APPROVAL_PENDING", redactedArgs, agent.getClientId());
 
             return InvocationDTOs.InvocationResponse.from(invocation);
         }
@@ -171,7 +190,7 @@ public class InvocationService {
         // Re-check kill switch immediately before side effect (Security Invariant)
         killSwitchGuard.checkKillSwitch(agent.getClientId(), tool);
 
-        // 7. Execution via Tool Adapter
+        // 9. Execution via Tool Adapter
         ToolAdapter adapter = toolAdapters.stream()
                 .filter(a -> a.supports(tool))
                 .findFirst()
@@ -182,28 +201,45 @@ public class InvocationService {
             String downstreamResult = adapter.execute(tool, request.arguments(), securityContext).join();
             long latency = System.currentTimeMillis() - startExec;
 
+            healthManager.recordSuccess(tool);
+
+            String sanitizedResult = redactionGuard.enforceTruncation(redactionGuard.redactSensitiveData(downstreamResult));
+
             invocation.setStatus(ToolInvocation.InvocationStatus.EXECUTED);
-            invocation.setResponsePayloadRedacted(downstreamResult);
+            invocation.setResponsePayloadRedacted(sanitizedResult);
             invocation.setLatencyMs((int) latency);
             invocation.setCompletedAt(Instant.now());
             invocationRepository.save(invocation);
 
-            auditChainService.appendAuditEvent(invocation, "COMPLETED", downstreamResult, agent.getClientId());
-            outboxService.publishEvent("tool.invocation.completed", "COMPLETED", downstreamResult, agent.getClientId());
+            auditChainService.appendAuditEvent(invocation, "COMPLETED", sanitizedResult, agent.getClientId());
+            outboxService.publishEvent("tool.invocation.completed", "COMPLETED", sanitizedResult, agent.getClientId());
 
             return InvocationDTOs.InvocationResponse.from(invocation);
         } catch (Exception e) {
             long latency = System.currentTimeMillis() - startExec;
-            invocation.setStatus(ToolInvocation.InvocationStatus.FAILED);
+            healthManager.recordFailure(tool);
+
+            boolean isWrite = isWriteOperation(tool);
+            ToolInvocation.InvocationStatus failureStatus = isWrite
+                    ? ToolInvocation.InvocationStatus.UNKNOWN_OUTCOME
+                    : ToolInvocation.InvocationStatus.FAILED;
+
+            invocation.setStatus(failureStatus);
             invocation.setErrorCode(ErrorCode.DOWNSTREAM_TIMEOUT.name());
             invocation.setLatencyMs((int) latency);
             invocation.setCompletedAt(Instant.now());
             invocationRepository.save(invocation);
 
-            auditChainService.appendAuditEvent(invocation, "FAILED", "{\"error\":\"" + e.getMessage() + "\"}", "downstream_adapter");
-            outboxService.publishEvent("tool.invocation.failed", "FAILED", "{\"error\":\"" + e.getMessage() + "\"}", agent.getClientId());
+            auditChainService.appendAuditEvent(invocation, failureStatus.name(), "{\"error\":\"" + e.getMessage() + "\"}", "downstream_adapter");
+            outboxService.publishEvent("tool.invocation.failed", failureStatus.name(), "{\"error\":\"" + e.getMessage() + "\"}", agent.getClientId());
 
             throw new AgentGateException(ErrorCode.DOWNSTREAM_TIMEOUT, "Downstream execution failed: " + e.getMessage(), e);
         }
+    }
+
+    private boolean isWriteOperation(Tool tool) {
+        if (tool == null) return false;
+        String hint = tool.getRoutingHint() != null ? tool.getRoutingHint().toUpperCase() : "";
+        return hint.startsWith("POST") || hint.startsWith("PUT") || hint.startsWith("DELETE") || hint.startsWith("PATCH");
     }
 }
