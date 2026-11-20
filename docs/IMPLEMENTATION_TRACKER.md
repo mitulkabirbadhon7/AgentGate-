@@ -6,11 +6,23 @@ Status values: NOT_STARTED, IN_PROGRESS, BLOCKED, DONE, VERIFIED.
 |---|---|---|---|
 | 0 | Decisions, repo skeleton, CI, local infra, ADRs | DONE | Spring Boot 3.3.5, Java 21/23, Flyway baseline schema, 8 ADRs, CI workflow, Unit test BUILD SUCCESS |
 | 1 | OAuth2 identity, agent registry, server/tool registry, OpenAPI import, MCP discovery | DONE | TokenService, AgentAuthFilter, SSRF defense, MCP discovery, 17 tests passed |
-| 2 | JSON Schema, policy versions/bindings, default deny, dry-run, playground, cache | NOT_STARTED | Policy tests and <=10s propagation test |
+| 2 | JSON Schema, policy versions/bindings, default deny, dry-run, playground, cache | DONE | SchemaValidationGuard, PolicyEvaluator, PolicyCacheService, PolicyAdminController, 23 tests passed |
 | 3 | Invocation lifecycle, audit chain, search/export, verification, idempotency | NOT_STARTED | Concurrent append and tamper tests |
 | 4 | Approval state machine, notifications, kill switches | NOT_STARTED | Approve/reject/edit/expiry/cancel tests |
 | 5 | Rate limits, quotas, redaction, resilience and outage behavior | NOT_STARTED | QA4/fault injection and FR5/FR6/FR10 tests |
 | 6 | Admin UX, observability, load/security tests, demo | NOT_STARTED | QA1–QA5 evidence and final demo |
+
+## Session log
+### Session 3 - Phase 2 Completion
+- Date: 2026-11-21
+- Phase: 2
+- Commit: Pending Phase 2 commit
+- Files changed: Policy, PolicyVersion, PolicyBinding entities and JPA repositories; SchemaValidationGuard, PolicyEvaluator, PolicyCacheService, PolicyService, PolicyAdminController; SchemaValidationGuardTests, PolicyEngineTests.
+- Commands run: mvn test
+- Actual test/build results: BUILD SUCCESS, Tests run: 23, Failures: 0, Errors: 0, Skipped: 0.
+- Decisions/ADR changes: Followed ADR-0004 for deterministic precedence and ADR-0007 for fail-closed policy outage handling.
+- Remaining risks: None.
+- Next task: Phase 3 — Invocation Lifecycle and Tamper-Evident Audit.
 
 ## Session log
 ### Session 2 - Phase 1 Completion
