@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Emergency Kill Switches')}"></head>
+<body>
+
+<aside th:replace="~{fragments :: sidebar(${activeNav})}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar('Emergency Kill Switches')}"></header>
+
+    <main class="content-body">
+        <!-- Emergency Activation Panel -->
+        <div class="panel" style="border-color: rgba(244, 63, 94, 0.3);">
+            <div class="panel-header" style="background: rgba(244, 63, 94, 0.08);">
+                <div class="panel-title" style="color: var(--accent-rose);">
+                    <span>⚡ Emergency Kill-Switch Dispatch</span>
+                </div>
+                <span class="chip chip-rose">Sub-millisecond Pre-check</span>
+            </div>
+            <div style="padding: 24px;">
+                <form th:action="@{/killswitches/toggle}" method="post" style="display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 16px; align-items: flex-end;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Scope</label>
+                        <select name="scope" id="ksScope" class="form-control" onchange="updateTargetOptions()">
+                            <option value="GLOBAL_WRITES">GLOBAL_WRITES (All State-Changing Tools)</option>
+                            <option value="AGENT">AGENT (Isolate Specific Agent)</option>
+                            <option value="TOOL">TOOL (Disable Specific Tool)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Target ID (Agent Client or Tool ID)</label>
+                        <input type="text" name="targetId" id="ksTargetId" class="form-control" placeholder="Optional for GLOBAL_WRITES">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label">Audit Reason</label>
+                        <input type="text" name="reason" class="form-control" placeholder="e.g. Suspected credential exfiltration" required>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-danger" style="height: 42px;">
+                            Activate Switch
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Current Kill Switches Registry -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Kill Switch Registry & State</div>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Scope</th>
+                            <th>Target</th>
+                            <th>Active</th>
+                            <th>Trigger Reason</th>
+                            <th>Triggered By</th>
+                            <th>Activated At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="ks : ${killSwitches}">
+                            <td>
+                                <span class="chip" 
+                                      th:classappend="${ks.scope.name() == 'GLOBAL_WRITES' ? 'chip-rose' : (ks.scope.name() == 'AGENT' ? 'chip-amber' : 'chip-indigo')}"
+                                      th:text="${ks.scope}">GLOBAL_WRITES</span>
+                            </td>
+                            <td class="mono" th:text="${ks.targetId != null ? ks.targetId : 'ALL WRITES'}">ALL</td>
+                            <td>
+                                <span class="chip" th:classappend="${ks.status.name() == 'ACTIVE' ? 'chip-rose' : 'chip-emerald'}" th:text="${ks.status}">ACTIVE</span>
+                            </td>
+                            <td th:text="${ks.reason}">Reason</td>
+                            <td class="mono" th:text="${ks.adminId}">admin</td>
+                            <td th:text="${#temporals.format(ks.activatedAt, 'yyyy-MM-dd HH:mm:ss')}">2026-11-21 00:00:00</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(killSwitches)}">
+                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                                Gateway in optimal state: 0 kill switches active.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function updateTargetOptions() {
+    let scope = document.getElementById('ksScope').value;
+    let target = document.getElementById('ksTargetId');
+    if (scope === 'GLOBAL_WRITES') {
+        target.placeholder = "Not required for GLOBAL_WRITES";
+        target.value = "";
+    } else if (scope === 'AGENT') {
+        target.placeholder = "e.g. checkout-agent-01";
+    } else if (scope === 'TOOL') {
+        target.placeholder = "e.g. tool ID or name";
+    }
+}
+</script>
+
+</body>
+</html>

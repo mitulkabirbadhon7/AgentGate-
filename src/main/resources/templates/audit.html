@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Cryptographic Audit Chain')}"></head>
+<body>
+
+<aside th:replace="~{fragments :: sidebar(${activeNav})}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar('Tamper-Evident SHA-256 Audit Chain')}"></header>
+
+    <main class="content-body">
+        <!-- Cryptographic Verification Result Banner if invoked -->
+        <div th:if="${verificationResult != null}" class="panel" 
+             th:style="${verificationResult.valid ? 'border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08);' : 'border-color: rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.08);'}">
+            <div class="panel-header" style="background: transparent;">
+                <div class="panel-title" th:style="${verificationResult.valid ? 'color: var(--accent-emerald);' : 'color: var(--accent-rose);'}">
+                    <span th:if="${verificationResult.valid}">✓ CRYPTOGRAPHIC AUDIT VERIFICATION PASSED</span>
+                    <span th:if="${!verificationResult.valid}">✗ AUDIT INTEGRITY VIOLATION DETECTED</span>
+                </div>
+                <span class="mono" style="font-size: 0.85rem;" th:text="'Verified ' + ${verificationResult.eventsChecked} + ' chained events'">0 events</span>
+            </div>
+            <div style="padding: 16px 24px; font-size: 0.88rem; color: var(--text-secondary);" th:text="${verificationResult.message}">
+                All SHA-256 hashes verified with zero payload tampering or sequence gaps.
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Cryptographic Append-Only Audit Trail</div>
+                <div class="panel-actions">
+                    <a th:href="@{/audit?verify=true}" class="btn btn-primary btn-sm">
+                        🛡 Verify Hash Chain Integrity
+                    </a>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Seq</th>
+                            <th>Event Type</th>
+                            <th>Tool</th>
+                            <th>Actor</th>
+                            <th>Event Hash (SHA-256)</th>
+                            <th>Prev Hash</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="event : ${events}">
+                            <td class="mono" style="color: #fff; font-weight: 700;" th:text="'#' + ${event.sequenceNumber}">#0</td>
+                            <td>
+                                <span class="chip"
+                                      th:classappend="${event.eventType == 'COMPLETED' ? 'chip-emerald' : (event.eventType == 'BLOCKED' ? 'chip-rose' : (event.eventType == 'APPROVAL_PENDING' ? 'chip-amber' : 'chip-indigo'))}"
+                                      th:text="${event.eventType}">RECEIVED</span>
+                            </td>
+                            <td class="mono" th:text="${event.invocation.tool.name}">tool</td>
+                            <td class="mono" th:text="${event.actor}">agent</td>
+                            <td class="mono" style="color: #818cf8; font-size: 0.78rem;" th:text="${#strings.substring(event.currHash, 0, 16)} + '...'">hash</td>
+                            <td class="mono" style="color: var(--text-muted); font-size: 0.78rem;" th:text="${event.prevHash != null && event.prevHash.length() > 16 ? #strings.substring(event.prevHash, 0, 16) + '...' : event.prevHash}">prev</td>
+                            <td th:text="${#temporals.format(event.eventTime, 'HH:mm:ss.SSS')}">12:00:00</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(events)}">
+                            <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                                No audit records logged. All tool calls through AgentGate are immutably signed here.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

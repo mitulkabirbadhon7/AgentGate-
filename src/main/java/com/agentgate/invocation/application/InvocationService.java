@@ -12,6 +12,7 @@ import com.agentgate.invocation.guard.KillSwitchGuard;
 import com.agentgate.invocation.guard.RedactionGuard;
 import com.agentgate.invocation.guard.SchemaValidationGuard;
 import com.agentgate.invocation.infrastructure.ToolInvocationRepository;
+import com.agentgate.observability.GatewayMetricsService;
 import com.agentgate.outbox.application.OutboxService;
 import com.agentgate.policy.application.PolicyDTOs;
 import com.agentgate.policy.application.PolicyService;
@@ -53,6 +54,7 @@ public class InvocationService {
     private final RedactionGuard redactionGuard;
     private final AuditChainService auditChainService;
     private final OutboxService outboxService;
+    private final GatewayMetricsService metricsService;
     private final List<ToolAdapter> toolAdapters;
     private final ObjectMapper objectMapper;
 
@@ -70,6 +72,7 @@ public class InvocationService {
             RedactionGuard redactionGuard,
             AuditChainService auditChainService,
             OutboxService outboxService,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) GatewayMetricsService metricsService,
             List<ToolAdapter> toolAdapters,
             ObjectMapper objectMapper) {
         this.invocationRepository = invocationRepository;
@@ -85,6 +88,7 @@ public class InvocationService {
         this.redactionGuard = redactionGuard;
         this.auditChainService = auditChainService;
         this.outboxService = outboxService;
+        this.metricsService = metricsService;
         this.toolAdapters = toolAdapters;
         this.objectMapper = objectMapper;
     }
@@ -171,6 +175,9 @@ public class InvocationService {
 
             auditChainService.appendAuditEvent(invocation, "BLOCKED", "{\"reason\":\"" + evalResult.reason() + "\"}", "policy_engine");
             outboxService.publishEvent("tool.invocation.blocked", "BLOCKED", redactedArgs, agent.getClientId());
+            if (metricsService != null) {
+                metricsService.recordInvocation(tool.getName(), agent.getClientId(), "BLOCKED", 0);
+            }
 
             return InvocationDTOs.InvocationResponse.from(invocation);
         }
@@ -213,6 +220,9 @@ public class InvocationService {
 
             auditChainService.appendAuditEvent(invocation, "COMPLETED", sanitizedResult, agent.getClientId());
             outboxService.publishEvent("tool.invocation.completed", "COMPLETED", sanitizedResult, agent.getClientId());
+            if (metricsService != null) {
+                metricsService.recordInvocation(tool.getName(), agent.getClientId(), "COMPLETED", latency);
+            }
 
             return InvocationDTOs.InvocationResponse.from(invocation);
         } catch (Exception e) {
@@ -232,6 +242,9 @@ public class InvocationService {
 
             auditChainService.appendAuditEvent(invocation, failureStatus.name(), "{\"error\":\"" + e.getMessage() + "\"}", "downstream_adapter");
             outboxService.publishEvent("tool.invocation.failed", failureStatus.name(), "{\"error\":\"" + e.getMessage() + "\"}", agent.getClientId());
+            if (metricsService != null) {
+                metricsService.recordInvocation(tool.getName(), agent.getClientId(), failureStatus.name(), latency);
+            }
 
             throw new AgentGateException(ErrorCode.DOWNSTREAM_TIMEOUT, "Downstream execution failed: " + e.getMessage(), e);
         }

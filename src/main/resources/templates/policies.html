@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Policies & Playground')}"></head>
+<body>
+
+<aside th:replace="~{fragments :: sidebar(${activeNav})}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar('Policy Engine & Simulation Playground')}"></header>
+
+    <main class="content-body">
+        <div class="split-grid">
+            <!-- Left Column: Active Policies & Bindings -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">Active Governance Policies</div>
+                        <span class="chip chip-indigo">Immutable Versions</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Policy Name</th>
+                                    <th>Active Ver</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="pol : ${policies}">
+                                    <td style="font-weight: 600; color: #fff;" th:text="${pol.name}">Policy Name</td>
+                                    <td class="mono" th:text="${pol.currentVersionId != null ? 'v' + pol.currentVersionId : 'None'}">v1</td>
+                                    <td>
+                                        <span class="chip chip-emerald" th:text="${pol.status}">ACTIVE</span>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(policies)}">
+                                    <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 25px;">
+                                        No policies registered yet.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">Scope Precedence Bindings</div>
+                        <span class="chip chip-indigo">ADR-0004 Deterministic</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Scope</th>
+                                    <th>Policy</th>
+                                    <th>Priority</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="b : ${bindings}">
+                                    <td>
+                                        <span class="chip" 
+                                              th:classappend="${b.scope.name() == 'AGENT_TOOL' ? 'chip-rose' : (b.scope.name() == 'TOOL' ? 'chip-amber' : (b.scope.name() == 'AGENT' ? 'chip-indigo' : 'chip-emerald'))}"
+                                              th:text="${b.scope}">GLOBAL</span>
+                                    </td>
+                                    <td th:text="${b.policy.name}">Policy Name</td>
+                                    <td class="mono" th:text="${b.priority}">100</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(bindings)}">
+                                    <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 25px;">
+                                        No bindings found. Default Deny is in effect.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Interactive Policy Playground -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Interactive Policy Playground</div>
+                    <span class="chip chip-emerald">Live Dry-Run Sandbox</span>
+                </div>
+                <div style="padding: 24px;">
+                    <form id="playgroundForm">
+                        <div class="form-group">
+                            <label class="form-label">Calling Agent ID</label>
+                            <input type="text" id="pgAgentId" class="form-control" placeholder="e.g. agent-checkout-01" value="agent-test-01" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tool ID</label>
+                            <input type="number" id="pgToolId" class="form-control" placeholder="e.g. 1" value="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Arguments JSON Payload</label>
+                            <textarea id="pgArguments" class="form-control" rows="5">{ "amount": 250, "currency": "USD" }</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Clearance Level</label>
+                            <select id="pgClearance" class="form-control">
+                                <option value="STANDARD">STANDARD</option>
+                                <option value="ELEVATED">ELEVATED</option>
+                                <option value="ADMIN">ADMIN</option>
+                            </select>
+                        </div>
+                        <button type="button" onclick="runSimulation()" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                            Run Policy Simulation
+                        </button>
+                    </form>
+
+                    <!-- Simulation Result Display -->
+                    <div id="simResult" style="margin-top: 24px; padding: 18px; border-radius: 8px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-subtle); display: none;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); margin-bottom: 6px;">Evaluation Outcome</div>
+                        <div id="simDecision" style="font-size: 1.3rem; font-weight: 700;">ALLOW</div>
+                        <div id="simReason" style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Reason: Rule matched</div>
+                        <div id="simVersion" class="mono" style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">Version ID: #1</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function runSimulation() {
+    let agentId = document.getElementById('pgAgentId').value;
+    let toolId = parseInt(document.getElementById('pgToolId').value, 10);
+    let clearance = document.getElementById('pgClearance').value;
+    let argsRaw = document.getElementById('pgArguments').value;
+    
+    let args = {};
+    try {
+        args = JSON.parse(argsRaw);
+    } catch(e) {
+        alert("Invalid arguments JSON");
+        return;
+    }
+
+    let payload = {
+        agentId: agentId,
+        toolId: toolId,
+        arguments: args,
+        userId: "test-user-simulation",
+        clearanceLevel: clearance,
+        dryRun: true
+    };
+
+    fetch('/api/v1/policies/playground/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+        let box = document.getElementById('simResult');
+        let decEl = document.getElementById('simDecision');
+        let reasEl = document.getElementById('simReason');
+        let verEl = document.getElementById('simVersion');
+
+        box.style.display = 'block';
+        if (data.success && data.data) {
+            let res = data.data;
+            decEl.innerText = res.decision;
+            if (res.decision === 'ALLOW') {
+                decEl.style.color = 'var(--accent-emerald)';
+            } else if (res.decision === 'DENY') {
+                decEl.style.color = 'var(--accent-rose)';
+            } else {
+                decEl.style.color = 'var(--accent-amber)';
+            }
+            reasEl.innerText = "Decision Reason: " + (res.reason || "Default Deny policy applied");
+            verEl.innerText = "Policy Version: " + (res.versionId ? "#" + res.versionId : "None");
+        } else {
+            decEl.innerText = "ERROR";
+            decEl.style.color = 'var(--accent-rose)';
+            reasEl.innerText = data.error ? data.error.message : "Simulation request failed";
+        }
+    })
+    .catch(err => {
+        alert("Network error: " + err);
+    });
+}
+</script>
+
+</body>
+</html>

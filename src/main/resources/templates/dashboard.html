@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Dashboard')}"></head>
+<body>
+
+<aside th:replace="~{fragments :: sidebar(${activeNav})}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar('Gateway Overview')}"></header>
+
+    <main class="content-body">
+        <!-- KPI Metrics Grid -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Active Agents</div>
+                <div class="kpi-value" th:text="${agentCount}">0</div>
+                <div class="kpi-sub">Verified OAuth2 Clients</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Registered Tools</div>
+                <div class="kpi-value" th:text="${toolCount}">0</div>
+                <div class="kpi-sub">MCP & REST Adapters</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Pending Approvals</div>
+                <div class="kpi-value" style="color: var(--accent-amber);" th:text="${pendingApprovals}">0</div>
+                <div class="kpi-sub">Human-in-the-Loop Queue</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">Audit Chain Events</div>
+                <div class="kpi-value" style="color: var(--accent-emerald);" th:text="${totalAuditEvents}">0</div>
+                <div class="kpi-sub">Cryptographically Chained</div>
+            </div>
+        </div>
+
+        <!-- Emergency Kill Switch Warning if Active -->
+        <div th:if="${globalWritesBlocked}" class="panel" style="border-color: rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.08);">
+            <div class="panel-header" style="background: transparent;">
+                <div class="panel-title" style="color: var(--accent-rose);">
+                    <span>⚠️ EMERGENCY KILL SWITCH ACTIVE: GLOBAL WRITES BLOCKED</span>
+                </div>
+                <a th:href="@{/killswitches}" class="btn btn-danger btn-sm">Manage Kill Switches</a>
+            </div>
+        </div>
+
+        <div class="split-grid">
+            <!-- Recent Audit Chain Stream -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Recent Audit Trail</div>
+                    <a th:href="@{/audit}" class="btn btn-secondary btn-sm">View Full Chain</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Seq</th>
+                                <th>Event Type</th>
+                                <th>Actor</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="audit : ${recentAudits}">
+                                <td class="mono" th:text="'#' + ${audit.sequenceNumber}">#0</td>
+                                <td>
+                                    <span class="chip" 
+                                          th:classappend="${audit.eventType == 'COMPLETED' ? 'chip-emerald' : (audit.eventType == 'BLOCKED' ? 'chip-rose' : (audit.eventType == 'APPROVAL_PENDING' ? 'chip-amber' : 'chip-indigo'))}"
+                                          th:text="${audit.eventType}">RECEIVED</span>
+                                </td>
+                                <td class="mono" th:text="${audit.actor}">system</td>
+                                <td th:text="${#temporals.format(audit.eventTime, 'HH:mm:ss.SSS')}">12:00:00</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(recentAudits)}">
+                                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                    No audit events recorded yet. Invocations will stream here in real-time.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Security Alerts Stream -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Security & Quota Alerts</div>
+                    <span class="chip chip-rose" th:if="${!#lists.isEmpty(recentAlerts)}" th:text="${#lists.size(recentAlerts)} + ' Alerts'">0</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Alert Type</th>
+                                <th>Severity</th>
+                                <th>Agent</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="alert : ${recentAlerts}">
+                                <td class="mono" th:text="${alert.alertType}">RATE_EXCEEDED</td>
+                                <td>
+                                    <span class="chip"
+                                          th:classappend="${alert.severity == 'CRITICAL' ? 'chip-rose' : 'chip-amber'}"
+                                          th:text="${alert.severity}">HIGH</span>
+                                </td>
+                                <td class="mono" th:text="${alert.triggeredBy != null ? alert.triggeredBy.clientId : 'unknown'}">agent-1</td>
+                                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" th:text="${alert.details}">Details</td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(recentAlerts)}">
+                                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                    Clean state: 0 security violations or quota overages.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

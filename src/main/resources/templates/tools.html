@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Tools & Downstream Servers')}"></head>
+<body>
+
+<aside th:replace="~{fragments :: sidebar(${activeNav})}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar('Tool & Downstream Server Registry')}"></header>
+
+    <main class="content-body">
+        <!-- Downstream Servers Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Downstream Target Servers</div>
+                <span class="chip chip-indigo">Isolated Environments</span>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Server Name</th>
+                            <th>Protocol</th>
+                            <th>Endpoint URL</th>
+                            <th>Timeout</th>
+                            <th>Circuit Threshold</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="server : ${servers}">
+                            <td class="mono" style="font-weight: 600; color: #fff;" th:text="${server.name}">Server 1</td>
+                            <td>
+                                <span class="chip" th:classappend="${server.type.name() == 'MCP' ? 'chip-emerald' : 'chip-indigo'}" th:text="${server.type}">REST</span>
+                            </td>
+                            <td class="mono" th:text="${server.endpointUrl}">http://localhost:8080</td>
+                            <td th:text="${server.timeoutSeconds} + 's'">30s</td>
+                            <td th:text="${server.circuitOpenThreshold} + ' failures'">5 failures</td>
+                            <td>
+                                <span class="chip chip-emerald">HEALTHY</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(servers)}">
+                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                No downstream servers registered yet.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tool Catalog Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Governance Tool Catalog</div>
+                <span class="chip chip-indigo" th:text="${#lists.size(tools)} + ' Tools'">0 Tools</span>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tool Name</th>
+                            <th>Server</th>
+                            <th>Risk Level</th>
+                            <th>Routing Hint</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="tool : ${tools}">
+                            <td class="mono" style="font-weight: 600; color: #a5b4fc;" th:text="${tool.name}">refund_tool</td>
+                            <td th:text="${tool.server.name}">billing-server</td>
+                            <td>
+                                <span class="chip"
+                                      th:classappend="${tool.riskLevel.name() == 'HIGH' ? 'chip-rose' : (tool.riskLevel.name() == 'MEDIUM' ? 'chip-amber' : 'chip-emerald')}"
+                                      th:text="${tool.riskLevel}">LOW</span>
+                            </td>
+                            <td class="mono" th:text="${tool.routingHint}">POST /refund</td>
+                            <td>
+                                <span class="chip chip-emerald" th:text="${tool.status}">ACTIVE</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(tools)}">
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                No tools cataloged yet.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' — AgentGate Governance Gateway'">AgentGate</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<!-- Sidebar Fragment -->
+<aside th:fragment="sidebar(activeNav)" class="sidebar">
+    <div class="brand">
+        <div class="brand-icon">AG</div>
+        <div>
+            <div class="brand-title">AgentGate</div>
+            <div class="brand-subtitle">Zero-Trust Gateway</div>
+        </div>
+    </div>
+    
+    <ul class="nav-menu">
+        <li class="nav-item" th:classappend="${activeNav == 'dashboard' ? 'active' : ''}">
+            <a th:href="@{/dashboard}">
+                <span>◈</span>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'agents' ? 'active' : ''}">
+            <a th:href="@{/agents}">
+                <span>⬡</span>
+                <span>Agents</span>
+            </a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'tools' ? 'active' : ''}">
+            <a th:href="@{/tools}">
+                <span>⚙</span>
+                <span>Tools & Servers</span>
+            </a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'policies' ? 'active' : ''}">
+            <a th:href="@{/policies}">
+                <span>🛡</span>
+                <span>Policies & Playground</span>
+            </a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'approvals' ? 'active' : ''}">
+            <a th:href="@{/approvals}">
+                <span>✋</span>
+                <span>Approvals</span>
+                <span th:if="${pendingApprovals != null && pendingApprovals > 0}" class="nav-badge" th:text="${pendingApprovals}">0</span>
+            </a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'audit' ? 'active' : ''}">
+            <a th:href="@{/audit}">
+                <span>⛓</span>
+                <span>Audit Chain</span>
+            </a>
+        </li>
+        <li class="nav-item" th:classappend="${activeNav == 'killswitches' ? 'active' : ''}">
+            <a th:href="@{/killswitches}">
+                <span>⚡</span>
+                <span>Kill Switches</span>
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <div>AgentGate v1.0.0-SNAPSHOT</div>
+        <div style="color: #64748b; font-size: 0.7rem; margin-top: 4px;">SHA-256 Hash Chain · Zero-Trust</div>
+    </div>
+</aside>
+
+<!-- Topbar Fragment -->
+<header th:fragment="topbar(pageTitle)" class="topbar">
+    <h1 class="page-title" th:text="${pageTitle}">Dashboard</h1>
+    <div class="status-indicator">
+        <span class="pulse-dot"></span>
+        <span>GATEWAY SECURE · STRICT ENFORCEMENT</span>
+    </div>
+</header>
+
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Human Approvals')}"></head>
+<body>
+
+<aside th:replace="~{fragments :: sidebar(${activeNav})}"></aside>
+
+<div class="main-wrapper">
+    <header th:replace="~{fragments :: topbar('Human-in-the-Loop Approval Queue')}"></header>
+
+    <main class="content-body">
+        <!-- Active Pending Queue -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Pending Human Review Queue</div>
+                <span class="chip chip-amber" th:text="${#lists.size(pendingList)} + ' Pending'">0 Pending</span>
+            </div>
+            <div style="padding: 24px;" th:if="${!#lists.isEmpty(pendingList)}">
+                <div th:each="appr : ${pendingList}" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <div>
+                            <span class="mono" style="font-size: 1rem; font-weight: 700; color: #fff;" th:text="'Approval Request #' + ${appr.approvalId}">#1</span>
+                            <span class="chip chip-amber" style="margin-left: 8px;">PENDING</span>
+                        </div>
+                        <div class="mono" style="font-size: 0.8rem; color: var(--text-muted);" th:text="'Expires: ' + ${#temporals.format(appr.expiresAt, 'HH:mm:ss')}">Expires</div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; font-size: 0.85rem;">
+                        <div>
+                            <span style="color: var(--text-muted);">Agent:</span>
+                            <span class="mono" style="color: #a5b4fc; font-weight: 600;" th:text="${appr.invocation.agent.clientId}">agent</span>
+                        </div>
+                        <div>
+                            <span style="color: var(--text-muted);">Target Tool:</span>
+                            <span class="mono" style="color: #fff; font-weight: 600;" th:text="${appr.invocation.tool.name}">tool</span>
+                        </div>
+                        <div>
+                            <span style="color: var(--text-muted);">Risk Level:</span>
+                            <span class="chip chip-rose" th:text="${appr.invocation.tool.riskLevel}">HIGH</span>
+                        </div>
+                    </div>
+
+                    <form th:action="@{/approvals/decide}" method="post">
+                        <input type="hidden" name="approvalId" th:value="${appr.approvalId}">
+                        <div class="form-group">
+                            <label class="form-label">Review / Edit Invocation Arguments (Re-validated on change)</label>
+                            <textarea name="editedArgs" class="form-control" rows="3" th:text="${appr.originalArguments}">{}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Reviewer Decision Rationale</label>
+                            <input type="text" name="reason" class="form-control" placeholder="Optional audit comment e.g. Verified with customer" value="Approved by SecOps Admin">
+                        </div>
+                        <div style="display: flex; gap: 12px; margin-top: 10px;">
+                            <button type="submit" name="decision" value="APPROVE" class="btn btn-primary">
+                                ✓ Approve & Dispatch Execution
+                            </button>
+                            <button type="submit" name="decision" value="REJECT" class="btn btn-danger">
+                                ✗ Reject Invocation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(pendingList)}" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                All clear! No pending approval requests waiting in queue.
+            </div>
+        </div>
+
+        <!-- Historical Approvals Table -->
+        <div class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Approval History Log</div>
+            </div>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tool</th>
+                            <th>Status</th>
+                            <th>Decided By</th>
+                            <th>Decision Reason</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="item : ${allApprovals}">
+                            <td class="mono" th:text="'#' + ${item.approvalId}">#1</td>
+                            <td class="mono" th:text="${item.invocation.tool.name}">tool</td>
+                            <td>
+                                <span class="chip"
+                                      th:classappend="${item.status.name() == 'APPROVED' ? 'chip-emerald' : (item.status.name() == 'REJECTED' ? 'chip-rose' : (item.status.name() == 'PENDING' ? 'chip-amber' : 'chip-indigo'))}"
+                                      th:text="${item.status}">APPROVED</span>
+                            </td>
+                            <td class="mono" th:text="${item.decidedBy != null ? item.decidedBy : '—'}">—</td>
+                            <td th:text="${item.decisionReason != null ? item.decisionReason : '—'}">—</td>
+                            <td th:text="${#temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm')}">2026-11-21 00:00</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(allApprovals)}">
+                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                                No approval records present.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>
