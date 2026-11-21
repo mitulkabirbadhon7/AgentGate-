@@ -1,6 +1,7 @@
 package com.agentgate.killswitch.application;
 
 import com.agentgate.killswitch.domain.KillSwitch;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -18,6 +19,7 @@ public class KillSwitchDTOs {
         String reason,
 
         @NotBlank(message = "Admin ID is required")
+        @JsonAlias({"activatedBy", "adminId"})
         String adminId
     ) {}
 

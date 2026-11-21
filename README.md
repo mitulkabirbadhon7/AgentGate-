@@ -677,45 +677,64 @@ docker compose ps
 
 ### 3. Step-by-Step Verification & Endpoints
 
-Once started, test the application via browser, curl, or PowerShell:
+> **Note for Windows PowerShell Users**: In Windows PowerShell 5.1, `curl` is aliased to `Invoke-WebRequest` which does not support bash flags like `-X` or line continuations (`\`). Use `Invoke-RestMethod`, use `curl.exe`, or run the included one-click verification script:
+> ```powershell
+> .\test-gateway.ps1
+> ```
 
-1. **Admin Control Dashboard**:
-   - URL: `http://localhost:8080/admin` (or `/dashboard`)
-   - Default Credentials: `admin` / `admin_gate_change_me`
-   - Features: Real-time telemetry, kill switches, human approval queue, rate limit status, and audit verification.
+Once the server is running (`.\mvnw.cmd spring-boot:run`), test the gateway:
+
+1. **Admin Web Control Dashboard**:
+   - URL: `http://localhost:8080/admin` (or `/dashboard`, `/tools`, `/agents`, `/policies`, `/approvals`, `/audit`, `/killswitches`)
+   - Features: Real-time telemetry, tool & downstream server catalog, agent client registry, kill switches, human approval queue, rate limits, and cryptographic audit verification.
 
 2. **Actuator Health & Metrics**:
-   ```bash
-   curl http://localhost:8080/actuator/health
-   # Expected: {"status":"UP","groups":["liveness","readiness"]}
-   ```
+   - *PowerShell*:
+     ```powershell
+     Invoke-RestMethod http://localhost:8080/actuator/health
+     ```
+   - *Bash / curl.exe*:
+     ```bash
+     curl http://localhost:8080/actuator/health
+     ```
 
 3. **Acquire JWT Bearer Token (Bootstrap Demo Agent)**:
-   ```bash
-   curl -s http://localhost:8080/api/v1/auth/token?clientId=demo-agent
-   # Returns: {"success":true,"data":{"access_token":"eyJhbGciOi...","token_type":"Bearer","expires_in":3600}}
-   ```
+   - *PowerShell*:
+     ```powershell
+     $token = (Invoke-RestMethod "http://localhost:8080/api/v1/auth/token?clientId=demo-agent").data.access_token
+     ```
+   - *Bash / curl.exe*:
+     ```bash
+     curl -s http://localhost:8080/api/v1/auth/token?clientId=demo-agent
+     ```
 
-4. **MCP Tool Discovery Endpoint**:
-   ```bash
-   # Supply the Bearer token acquired above:
-   curl -X POST http://localhost:8080/mcp \
-     -H "Content-Type: application/json" \
-     -H "Authorization: Bearer <ACCESS_TOKEN>" \
-     -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
-   ```
+4. **MCP Tool Discovery Endpoint (`/mcp`)**:
+   - *PowerShell*:
+     ```powershell
+     $headers = @{ "Authorization" = "Bearer $token"; "Content-Type" = "application/json" }
+     Invoke-RestMethod -Uri "http://localhost:8080/mcp" -Headers $headers -Method Post -Body '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+     ```
+   - *Bash / curl.exe*:
+     ```bash
+     curl.exe -X POST http://localhost:8080/mcp -H "Content-Type: application/json" -H "Authorization: Bearer <ACCESS_TOKEN>" -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+     ```
 
-5. **REST Tool Invocation Endpoint**:
-   ```bash
-   curl -X POST http://localhost:8080/api/v1/invocations \
-     -H "Content-Type: application/json" \
-     -H "Authorization: Bearer <ACCESS_TOKEN>" \
-     -d '{"toolName":"weather_service","arguments":{"city":"London"}}'
-   # Returns governed result: {"success":true,"data":{"status":"EXECUTED", ...}}
-   ```
+5. **REST Tool Invocation Endpoint (`/api/v1/invocations`)**:
+   - *PowerShell*:
+     ```powershell
+     $body = @{ toolName = "weather_service"; arguments = @{ city = "London" } } | ConvertTo-Json
+     Invoke-RestMethod -Uri "http://localhost:8080/api/v1/invocations" -Headers $headers -Method Post -Body $body
+     ```
+   - *Bash / curl.exe*:
+     ```bash
+     curl.exe -X POST http://localhost:8080/api/v1/invocations -H "Content-Type: application/json" -H "Authorization: Bearer <ACCESS_TOKEN>" -d '{"toolName":"weather_service","arguments":{"city":"London"}}'
+     ```
 
 6. **Verify Cryptographic SHA-256 Audit Trail**:
-   Visit `http://localhost:8080/audit` in your browser to inspect the tamper-evident cryptographic hash chain recording the invocation.
+   Visit `http://localhost:8080/audit?verify=true` in your browser or run:
+   ```powershell
+   Invoke-RestMethod -Uri "http://localhost:8080/api/v1/audit/verify" -Headers $headers -Method Post
+   ```
 
 ---
 

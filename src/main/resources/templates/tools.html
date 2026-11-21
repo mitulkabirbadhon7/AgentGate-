@@ -22,7 +22,7 @@
                             <th>Server Name</th>
                             <th>Protocol</th>
                             <th>Endpoint URL</th>
-                            <th>Timeout</th>
+                            <th>Check Interval</th>
                             <th>Circuit Threshold</th>
                             <th>Status</th>
                         </tr>
@@ -34,7 +34,7 @@
                                 <span class="chip" th:classappend="${server.type.name() == 'MCP' ? 'chip-emerald' : 'chip-indigo'}" th:text="${server.type}">REST</span>
                             </td>
                             <td class="mono" th:text="${server.endpointUrl}">http://localhost:8080</td>
-                            <td th:text="${server.timeoutSeconds} + 's'">30s</td>
+                            <td th:text="${server.healthCheckIntervalSec} + 's'">30s</td>
                             <td th:text="${server.circuitOpenThreshold} + ' failures'">5 failures</td>
                             <td>
                                 <span class="chip chip-emerald">HEALTHY</span>
@@ -70,7 +70,7 @@
                     <tbody>
                         <tr th:each="tool : ${tools}">
                             <td class="mono" style="font-weight: 600; color: #a5b4fc;" th:text="${tool.name}">refund_tool</td>
-                            <td th:text="${tool.server.name}">billing-server</td>
+                            <td th:text="${tool.server != null ? tool.server.name : '—'}">billing-server</td>
                             <td>
                                 <span class="chip"
                                       th:classappend="${tool.riskLevel.name() == 'HIGH' ? 'chip-rose' : (tool.riskLevel.name() == 'MEDIUM' ? 'chip-amber' : 'chip-emerald')}"

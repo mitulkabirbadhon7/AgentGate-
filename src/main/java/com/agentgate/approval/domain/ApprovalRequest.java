@@ -86,11 +86,19 @@ public class ApprovalRequest {
     public String getOriginalArgumentsEncrypted() { return originalArgumentsEncrypted; }
     public void setOriginalArgumentsEncrypted(String originalArgumentsEncrypted) { this.originalArgumentsEncrypted = originalArgumentsEncrypted; }
 
+    public String getOriginalArguments() {
+        return originalArgumentsEncrypted;
+    }
+
     public String getEditedArgumentsEncrypted() { return editedArgumentsEncrypted; }
     public void setEditedArgumentsEncrypted(String editedArgumentsEncrypted) { this.editedArgumentsEncrypted = editedArgumentsEncrypted; }
 
     public String getApproverId() { return approverId; }
     public void setApproverId(String approverId) { this.approverId = approverId; }
+
+    public String getDecidedBy() {
+        return approverId;
+    }
 
     public String getDecisionReason() { return decisionReason; }
     public void setDecisionReason(String decisionReason) { this.decisionReason = decisionReason; }

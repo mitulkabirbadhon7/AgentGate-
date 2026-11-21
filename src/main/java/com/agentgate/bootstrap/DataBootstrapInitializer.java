@@ -61,7 +61,7 @@ public class DataBootstrapInitializer implements ApplicationRunner {
     }
 
     private void bootstrapAgents() {
-        if (agentRepository.count() == 0) {
+        if (!agentRepository.existsById("demo-agent")) {
             log.info("Bootstrapping initial AgentGate demo agent client...");
             AgentClient demoAgent = new AgentClient(
                     "demo-agent",
@@ -72,10 +72,22 @@ public class DataBootstrapInitializer implements ApplicationRunner {
             agentRepository.save(demoAgent);
             log.info("Bootstrapped demo agent: 'demo-agent' (Secret: 'demo-secret')");
         }
+
+        if (!agentRepository.existsById("mcp-agent-default")) {
+            log.info("Bootstrapping default MCP agent bridge client...");
+            AgentClient mcpAgent = new AgentClient(
+                    "mcp-agent-default",
+                    "Default MCP Agent Client",
+                    passwordEncoder.encode("mcp-default-secret"),
+                    "AgentGate MCP Protocol Bridge"
+            );
+            agentRepository.save(mcpAgent);
+            log.info("Bootstrapped default MCP agent: 'mcp-agent-default'");
+        }
     }
 
     private void bootstrapTools() {
-        if (downstreamServerRepositoryCount() == 0) {
+        if (!serverRepository.existsByName("local-mock-service")) {
             log.info("Bootstrapping initial downstream services and governed tools...");
             DownstreamServer mockServer = new DownstreamServer(
                     "local-mock-service",
@@ -86,25 +98,29 @@ public class DataBootstrapInitializer implements ApplicationRunner {
             );
             DownstreamServer savedServer = serverRepository.save(mockServer);
 
-            Tool weatherTool = new Tool(
-                    savedServer,
-                    "weather_service",
-                    "Governed real-time meteorological query tool for global cities",
-                    "{\"type\":\"object\",\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"]}",
-                    Tool.RiskLevel.LOW,
-                    "POST /weather"
-            );
-            toolRepository.save(weatherTool);
+            if (!toolRepository.existsByName("weather_service")) {
+                Tool weatherTool = new Tool(
+                        savedServer,
+                        "weather_service",
+                        "Governed real-time meteorological query tool for global cities",
+                        "{\"type\":\"object\",\"properties\":{\"city\":{\"type\":\"string\"}},\"required\":[\"city\"]}",
+                        Tool.RiskLevel.LOW,
+                        "POST /weather"
+                );
+                toolRepository.save(weatherTool);
+            }
 
-            Tool echoTool = new Tool(
-                    savedServer,
-                    "echo_tool",
-                    "Governed payload inspection and echo diagnostic tool",
-                    "{\"type\":\"object\",\"properties\":{\"message\":{\"type\":\"string\"}}}",
-                    Tool.RiskLevel.LOW,
-                    "POST /echo"
-            );
-            toolRepository.save(echoTool);
+            if (!toolRepository.existsByName("echo_tool")) {
+                Tool echoTool = new Tool(
+                        savedServer,
+                        "echo_tool",
+                        "Governed payload inspection and echo diagnostic tool",
+                        "{\"type\":\"object\",\"properties\":{\"message\":{\"type\":\"string\"}}}",
+                        Tool.RiskLevel.LOW,
+                        "POST /echo"
+                );
+                toolRepository.save(echoTool);
+            }
 
             log.info("Bootstrapped tools: 'weather_service', 'echo_tool'");
         }
@@ -145,15 +161,30 @@ public class DataBootstrapInitializer implements ApplicationRunner {
             policyRepository.save(savedPolicy);
 
             AgentClient demoAgent = agentRepository.findById("demo-agent").orElse(null);
-            PolicyBinding agentBinding = new PolicyBinding(
-                    savedPolicy,
-                    demoAgent,
-                    null,
-                    PolicyBinding.BindingScope.AGENT,
-                    100
-            );
-            policyBindingRepository.save(agentBinding);
-            log.info("Bootstrapped baseline policy: 'baseline-governance-policy' (v1, AGENT: demo-agent)");
+            if (demoAgent != null) {
+                PolicyBinding agentBinding = new PolicyBinding(
+                        savedPolicy,
+                        demoAgent,
+                        null,
+                        PolicyBinding.BindingScope.AGENT,
+                        100
+                );
+                policyBindingRepository.save(agentBinding);
+                log.info("Bootstrapped baseline policy: 'baseline-governance-policy' (v1, AGENT: demo-agent)");
+            }
+
+            AgentClient mcpAgent = agentRepository.findById("mcp-agent-default").orElse(null);
+            if (mcpAgent != null) {
+                PolicyBinding mcpBinding = new PolicyBinding(
+                        savedPolicy,
+                        mcpAgent,
+                        null,
+                        PolicyBinding.BindingScope.AGENT,
+                        100
+                );
+                policyBindingRepository.save(mcpBinding);
+                log.info("Bootstrapped baseline policy binding for MCP agent: 'mcp-agent-default'");
+            }
         }
     }
 }

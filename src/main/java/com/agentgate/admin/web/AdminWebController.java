@@ -29,6 +29,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -84,6 +85,15 @@ public class AdminWebController {
         this.killSwitchRepository = killSwitchRepository;
         this.alertRepository = alertRepository;
         this.objectMapper = objectMapper;
+    }
+
+    @ModelAttribute("pendingApprovals")
+    public long populatePendingApprovals() {
+        try {
+            return approvalRepository.findByStatusOrderByCreatedAtDesc(ApprovalRequest.ApprovalStatus.PENDING).size();
+        } catch (Exception e) {
+            return 0L;
+        }
     }
 
     @GetMapping({"/", "/dashboard", "/admin"})
@@ -196,10 +206,11 @@ public class AdminWebController {
             @RequestParam(required = false) String targetId,
             @RequestParam(required = false) String reason) {
         KillSwitch.KillSwitchScope ksScope = KillSwitch.KillSwitchScope.valueOf(scope);
+        String cleanTargetId = (targetId != null && !targetId.isBlank()) ? targetId.trim() : null;
         killSwitchService.tripKillSwitch(new KillSwitchDTOs.TripKillSwitchRequest(
                 ksScope,
-                targetId,
-                reason != null ? reason : "Emergency activation via Admin UI",
+                cleanTargetId,
+                reason != null && !reason.isBlank() ? reason.trim() : "Emergency activation via Admin UI",
                 "admin_user"
         ));
         return "redirect:/killswitches";

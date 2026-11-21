@@ -56,6 +56,10 @@ public class AgentClient {
     public String getDisplayName() { return displayName; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }
 
+    public String getDescription() {
+        return displayName != null && !displayName.isBlank() ? displayName : name;
+    }
+
     public AgentStatus getStatus() { return status; }
     public void setStatus(AgentStatus status) { this.status = status; }
 

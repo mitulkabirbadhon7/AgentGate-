@@ -22,7 +22,8 @@
                         <tr>
                             <th>Client ID</th>
                             <th>Display Name</th>
-                            <th>Description</th>
+                            <th>Internal Name</th>
+                            <th>Status</th>
                             <th>Authentication Mode</th>
                             <th>Created At</th>
                         </tr>
@@ -30,15 +31,20 @@
                     <tbody>
                         <tr th:each="agent : ${agents}">
                             <td class="mono" style="color: #818cf8; font-weight: 600;" th:text="${agent.clientId}">agent-id</td>
-                            <td th:text="${agent.displayName}">Display Name</td>
-                            <td th:text="${agent.description}">Description</td>
+                            <td th:text="${agent.displayName != null && !agent.displayName.isBlank() ? agent.displayName : agent.name}">Display Name</td>
+                            <td class="mono" th:text="${agent.name}">Name</td>
+                            <td>
+                                <span class="chip"
+                                      th:classappend="${agent.status != null && agent.status.name() == 'ACTIVE' ? 'chip-emerald' : 'chip-rose'}"
+                                      th:text="${agent.status}">ACTIVE</span>
+                            </td>
                             <td>
                                 <span class="chip chip-emerald">HMAC-SHA256 JWT</span>
                             </td>
                             <td th:text="${#temporals.format(agent.createdAt, 'yyyy-MM-dd HH:mm')}">2026-11-21 00:00</td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(agents)}">
-                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 40px;">
+                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 40px;">
                                 No agent clients registered yet.
                             </td>
                         </tr>

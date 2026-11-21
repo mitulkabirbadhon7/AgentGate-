@@ -21,6 +21,11 @@ spring:
       host: localhost
       port: 6379
 
+management:
+  health:
+    redis:
+      enabled: false
+
 agentgate:
   security:
     jwt:

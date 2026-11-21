@@ -62,6 +62,8 @@ public class DownstreamServer {
     public int getHealthCheckIntervalSec() { return healthCheckIntervalSec; }
     public void setHealthCheckIntervalSec(int healthCheckIntervalSec) { this.healthCheckIntervalSec = healthCheckIntervalSec; }
 
+    public int getTimeoutSeconds() { return healthCheckIntervalSec; }
+
     public int getCircuitOpenThreshold() { return circuitOpenThreshold; }
     public void setCircuitOpenThreshold(int circuitOpenThreshold) { this.circuitOpenThreshold = circuitOpenThreshold; }
 

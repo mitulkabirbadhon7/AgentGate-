@@ -54,7 +54,7 @@
                                       th:classappend="${event.eventType == 'COMPLETED' ? 'chip-emerald' : (event.eventType == 'BLOCKED' ? 'chip-rose' : (event.eventType == 'APPROVAL_PENDING' ? 'chip-amber' : 'chip-indigo'))}"
                                       th:text="${event.eventType}">RECEIVED</span>
                             </td>
-                            <td class="mono" th:text="${event.invocation.tool.name}">tool</td>
+                            <td class="mono" th:text="${event.invocation?.tool?.name != null ? event.invocation.tool.name : '—'}">tool</td>
                             <td class="mono" th:text="${event.actor}">agent</td>
                             <td class="mono" style="color: #818cf8; font-size: 0.78rem;" th:text="${#strings.substring(event.currHash, 0, 16)} + '...'">hash</td>
                             <td class="mono" style="color: var(--text-muted); font-size: 0.78rem;" th:text="${event.prevHash != null && event.prevHash.length() > 16 ? #strings.substring(event.prevHash, 0, 16) + '...' : event.prevHash}">prev</td>

@@ -28,15 +28,15 @@
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; font-size: 0.85rem;">
                         <div>
                             <span style="color: var(--text-muted);">Agent:</span>
-                            <span class="mono" style="color: #a5b4fc; font-weight: 600;" th:text="${appr.invocation.agent.clientId}">agent</span>
+                            <span class="mono" style="color: #a5b4fc; font-weight: 600;" th:text="${appr.invocation?.agent?.clientId != null ? appr.invocation.agent.clientId : '—'}">agent</span>
                         </div>
                         <div>
                             <span style="color: var(--text-muted);">Target Tool:</span>
-                            <span class="mono" style="color: #fff; font-weight: 600;" th:text="${appr.invocation.tool.name}">tool</span>
+                            <span class="mono" style="color: #fff; font-weight: 600;" th:text="${appr.invocation?.tool?.name != null ? appr.invocation.tool.name : '—'}">tool</span>
                         </div>
                         <div>
                             <span style="color: var(--text-muted);">Risk Level:</span>
-                            <span class="chip chip-rose" th:text="${appr.invocation.tool.riskLevel}">HIGH</span>
+                            <span class="chip chip-rose" th:text="${appr.invocation?.tool?.riskLevel != null ? appr.invocation.tool.riskLevel : 'UNKNOWN'}">HIGH</span>
                         </div>
                     </div>
 
@@ -44,7 +44,7 @@
                         <input type="hidden" name="approvalId" th:value="${appr.approvalId}">
                         <div class="form-group">
                             <label class="form-label">Review / Edit Invocation Arguments (Re-validated on change)</label>
-                            <textarea name="editedArgs" class="form-control" rows="3" th:text="${appr.originalArguments}">{}</textarea>
+                            <textarea name="editedArgs" class="form-control" rows="3" th:text="${appr.originalArgumentsEncrypted != null ? appr.originalArgumentsEncrypted : appr.originalArguments}">{}</textarea>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Reviewer Decision Rationale</label>
@@ -86,13 +86,13 @@
                     <tbody>
                         <tr th:each="item : ${allApprovals}">
                             <td class="mono" th:text="'#' + ${item.approvalId}">#1</td>
-                            <td class="mono" th:text="${item.invocation.tool.name}">tool</td>
+                            <td class="mono" th:text="${item.invocation?.tool?.name != null ? item.invocation.tool.name : '—'}">tool</td>
                             <td>
                                 <span class="chip"
                                       th:classappend="${item.status.name() == 'APPROVED' ? 'chip-emerald' : (item.status.name() == 'REJECTED' ? 'chip-rose' : (item.status.name() == 'PENDING' ? 'chip-amber' : 'chip-indigo'))}"
                                       th:text="${item.status}">APPROVED</span>
                             </td>
-                            <td class="mono" th:text="${item.decidedBy != null ? item.decidedBy : '—'}">—</td>
+                            <td class="mono" th:text="${item.approverId != null ? item.approverId : (item.decidedBy != null ? item.decidedBy : '—')}">—</td>
                             <td th:text="${item.decisionReason != null ? item.decisionReason : '—'}">—</td>
                             <td th:text="${#temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm')}">2026-11-21 00:00</td>
                         </tr>

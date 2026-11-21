@@ -9,12 +9,19 @@ If an agent compromises credentials or begins abnormal mutation requests:
 3. Provide an incident reason (e.g. `Incident INC-402: Anomalous write activity detected`).
 4. Click **Activate Switch**.
 5. *API Alternative*:
-   ```bash
-   curl -X POST http://localhost:8080/api/v1/killswitches \
-     -H "Authorization: Bearer <ADMIN_TOKEN>" \
-     -H "Content-Type: application/json" \
-     -d '{"scope":"GLOBAL_WRITES","reason":"Emergency containment","activatedBy":"secops"}'
-   ```
+   - *PowerShell*:
+     ```powershell
+     $headers = @{ "Authorization" = "Bearer <ADMIN_TOKEN>"; "Content-Type" = "application/json" }
+     $body = '{"scope":"GLOBAL_WRITES","reason":"Emergency containment","activatedBy":"secops"}'
+     Invoke-RestMethod -Uri "http://localhost:8080/api/v1/killswitches" -Method Post -Headers $headers -Body $body
+     ```
+   - *Bash / curl.exe*:
+     ```bash
+     curl.exe -X POST http://localhost:8080/api/v1/killswitches \
+       -H "Authorization: Bearer <ADMIN_TOKEN>" \
+       -H "Content-Type: application/json" \
+       -d '{"scope":"GLOBAL_WRITES","reason":"Emergency containment","activatedBy":"secops"}'
+     ```
 *Effect*: All state-changing (POST, PUT, DELETE, PATCH) tool invocations across all agents are blocked within <1 millisecond.
 
 ### 2. Investigating an Audit Chain Tampering Incident

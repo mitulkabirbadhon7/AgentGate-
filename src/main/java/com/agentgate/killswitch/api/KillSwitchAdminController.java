@@ -20,7 +20,7 @@ public class KillSwitchAdminController {
         this.killSwitchService = killSwitchService;
     }
 
-    @PostMapping("/trip")
+    @PostMapping({"", "/trip"})
     public ResponseEntity<ApiResponse<KillSwitchDTOs.KillSwitchResponse>> trip(
             @Valid @RequestBody KillSwitchDTOs.TripKillSwitchRequest request) {
         KillSwitchDTOs.KillSwitchResponse response = killSwitchService.tripKillSwitch(request);
