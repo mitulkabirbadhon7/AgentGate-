@@ -29,7 +29,7 @@ try {
 
 # 2. Verify Admin Web Routes
 Write-Host "`n[2/8] Verifying Admin Dashboard and Web UI routes..." -ForegroundColor Yellow
-$webRoutes = @("/admin", "/tools", "/agents", "/policies", "/approvals", "/audit", "/killswitches")
+$webRoutes = @("/", "/admin", "/tools", "/agents", "/policies", "/approvals", "/audit", "/killswitches")
 foreach ($route in $webRoutes) {
     try {
         $resp = Invoke-WebRequest -Uri "$baseUrl$route" -Method Get -UseBasicParsing

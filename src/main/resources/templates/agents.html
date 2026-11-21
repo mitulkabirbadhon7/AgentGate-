@@ -30,7 +30,7 @@
                     </thead>
                     <tbody>
                         <tr th:each="agent : ${agents}">
-                            <td class="mono" style="color: #818cf8; font-weight: 600;" th:text="${agent.clientId != null ? agent.clientId : '—'}">agent-id</td>
+                            <td class="mono" style="color: var(--brand-primary); font-weight: 600;" th:text="${agent.clientId != null ? agent.clientId : '—'}">agent-id</td>
                             <td th:text="${agent.displayName != null && !agent.displayName.isBlank() ? agent.displayName : (agent.name != null ? agent.name : '—')}">Display Name</td>
                             <td class="mono" th:text="${agent.name != null ? agent.name : '—'}">Name</td>
                             <td>

@@ -28,7 +28,7 @@
                             </thead>
                             <tbody>
                                 <tr th:each="pol : ${policies}">
-                                    <td style="font-weight: 600; color: #fff;" th:text="${pol.name}">Policy Name</td>
+                                    <td style="font-weight: 600; color: var(--text-main);" th:text="${pol.name}">Policy Name</td>
                                     <td class="mono" th:text="${pol.currentVersionId != null ? 'v' + pol.currentVersionId : 'None'}">v1</td>
                                     <td>
                                         <span class="chip chip-emerald" th:text="${pol.status}">ACTIVE</span>

@@ -29,7 +29,7 @@
                     </thead>
                     <tbody>
                         <tr th:each="server : ${servers}">
-                            <td class="mono" style="font-weight: 600; color: #fff;" th:text="${server.name != null ? server.name : '—'}">Server 1</td>
+                            <td class="mono" style="font-weight: 600; color: var(--text-main);" th:text="${server.name != null ? server.name : '—'}">Server 1</td>
                             <td>
                                 <span class="chip" th:classappend="${server.type != null && server.type.name() == 'MCP' ? 'chip-emerald' : 'chip-indigo'}" th:text="${server.type != null ? server.type : 'REST'}">REST</span>
                             </td>
@@ -69,7 +69,7 @@
                     </thead>
                     <tbody>
                         <tr th:each="tool : ${tools}">
-                            <td class="mono" style="font-weight: 600; color: #a5b4fc;" th:text="${tool.name != null ? tool.name : '—'}">refund_tool</td>
+                            <td class="mono" style="font-weight: 600; color: var(--brand-primary);" th:text="${tool.name != null ? tool.name : '—'}">refund_tool</td>
                             <td th:text="${tool.server != null ? tool.server.name : '—'}">billing-server</td>
                             <td>
                                 <span class="chip"

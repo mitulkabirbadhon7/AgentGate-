@@ -19,7 +19,7 @@
                 <div th:each="appr : ${pendingList}" style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                         <div>
-                            <span class="mono" style="font-size: 1rem; font-weight: 700; color: #fff;" th:text="'Approval Request #' + ${appr.approvalId}">#1</span>
+                            <span class="mono" style="font-size: 1rem; font-weight: 700; color: var(--text-main);" th:text="'Approval Request #' + ${appr.approvalId}">#1</span>
                             <span class="chip chip-amber" style="margin-left: 8px;">PENDING</span>
                         </div>
                         <div class="mono" style="font-size: 0.8rem; color: var(--text-muted);" th:text="'Expires: ' + (${appr.expiresAt != null ? #temporals.format(appr.expiresAt, 'HH:mm:ss') : '—'})">Expires</div>
@@ -28,11 +28,11 @@
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; font-size: 0.85rem;">
                         <div>
                             <span style="color: var(--text-muted);">Agent:</span>
-                            <span class="mono" style="color: #a5b4fc; font-weight: 600;" th:text="${appr.invocation?.agent?.clientId != null ? appr.invocation.agent.clientId : '—'}">agent</span>
+                            <span class="mono" style="color: var(--brand-primary); font-weight: 600;" th:text="${appr.invocation?.agent?.clientId != null ? appr.invocation.agent.clientId : '—'}">agent</span>
                         </div>
                         <div>
                             <span style="color: var(--text-muted);">Target Tool:</span>
-                            <span class="mono" style="color: #fff; font-weight: 600;" th:text="${appr.invocation?.tool?.name != null ? appr.invocation.tool.name : '—'}">tool</span>
+                            <span class="mono" style="color: var(--text-main); font-weight: 600;" th:text="${appr.invocation?.tool?.name != null ? appr.invocation.tool.name : '—'}">tool</span>
                         </div>
                         <div>
                             <span style="color: var(--text-muted);">Risk Level:</span>

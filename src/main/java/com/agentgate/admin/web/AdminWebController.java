@@ -96,7 +96,16 @@ public class AdminWebController {
         }
     }
 
-    @GetMapping({"/", "/dashboard", "/admin"})
+    @GetMapping("/")
+    public String index(Model model) {
+        model.addAttribute("agentCount", agentRepository.count());
+        model.addAttribute("toolCount", toolRepository.count());
+        model.addAttribute("totalAuditEvents", auditRepository.count());
+        model.addAttribute("activeKillSwitches", killSwitchRepository.findByStatus(KillSwitch.KillSwitchStatus.ACTIVE).size());
+        return "index";
+    }
+
+    @GetMapping({"/dashboard", "/admin"})
     public String dashboard(Model model) {
         long agentCount = agentRepository.count();
         long toolCount = toolRepository.count();

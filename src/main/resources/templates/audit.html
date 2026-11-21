@@ -48,7 +48,7 @@
                     </thead>
                     <tbody>
                         <tr th:each="event : ${events}">
-                            <td class="mono" style="color: #fff; font-weight: 700;" th:text="'#' + ${event.sequenceNumber}">#0</td>
+                            <td class="mono" style="color: var(--brand-primary); font-weight: 700;" th:text="'#' + ${event.sequenceNumber}">#0</td>
                             <td>
                                 <span class="chip"
                                       th:classappend="${event.eventType == 'COMPLETED' ? 'chip-emerald' : (event.eventType == 'BLOCKED' ? 'chip-rose' : (event.eventType == 'APPROVAL_PENDING' ? 'chip-amber' : 'chip-indigo'))}"
@@ -56,7 +56,7 @@
                             </td>
                             <td class="mono" th:text="${event.invocation?.tool?.name != null ? event.invocation.tool.name : '—'}">tool</td>
                             <td class="mono" th:text="${event.actor != null ? event.actor : '—'}">agent</td>
-                            <td class="mono" style="color: #818cf8; font-size: 0.78rem;" th:text="${event.currHash != null && event.currHash.length() > 16 ? #strings.substring(event.currHash, 0, 16) + '...' : (event.currHash != null ? event.currHash : '—')}">hash</td>
+                            <td class="mono" style="color: var(--brand-primary); font-size: 0.78rem;" th:text="${event.currHash != null && event.currHash.length() > 16 ? #strings.substring(event.currHash, 0, 16) + '...' : (event.currHash != null ? event.currHash : '—')}">hash</td>
                             <td class="mono" style="color: var(--text-muted); font-size: 0.78rem;" th:text="${event.prevHash != null && event.prevHash.length() > 16 ? #strings.substring(event.prevHash, 0, 16) + '...' : (event.prevHash != null ? event.prevHash : '—')}">prev</td>
                             <td th:text="${event.eventTime != null ? #temporals.format(event.eventTime, 'HH:mm:ss.SSS') : '—'}">12:00:00</td>
                         </tr>

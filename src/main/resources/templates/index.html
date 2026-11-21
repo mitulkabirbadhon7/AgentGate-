@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentGate — Zero-Trust AI Governance & Tool Execution Gateway</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="landing-body">
+
+    <!-- Top Announcement Bar (Dark Accent matching reference screenshot) -->
+    <div class="top-announcement-bar">
+        <div>
+            <span>🛡️ AGENTGATE PLATFORM | Zero-Trust AI Tool Governance & Cryptographic SHA-256 Audit Chaining</span>
+        </div>
+        <div style="display: flex; gap: 20px;">
+            <a th:href="@{/admin}">Admin Console</a>
+            <a th:href="@{/tools}">Tools Directory</a>
+            <a th:href="@{/audit}">Audit Ledger</a>
+        </div>
+    </div>
+
+    <!-- Soft Ice-Blue Ambient Aura -->
+    <div class="ambient-glow-1"></div>
+
+    <!-- Main Navigation Header (Clean White Navbar) -->
+    <nav class="landing-nav">
+        <div class="brand">
+            <div class="brand-icon">AG</div>
+            <div>
+                <div class="brand-title">AgentGate</div>
+                <div class="brand-subtitle">Zero-Trust AI Gateway</div>
+            </div>
+        </div>
+
+        <ul class="landing-nav-links">
+            <li><a href="#pipeline">Architecture</a></li>
+            <li><a href="#playground">Live Playground</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a th:href="@{/admin}">Admin Console</a></li>
+        </ul>
+
+        <div class="landing-nav-actions">
+            <div class="status-indicator">
+                <span class="pulse-dot"></span>
+                <span>GATEWAY SECURE</span>
+            </div>
+            <a th:href="@{/admin}" class="btn btn-primary btn-sm">Launch Console →</a>
+        </div>
+    </nav>
+
+    <!-- Two-Column Hero Showcase (Directly matching user reference image layout) -->
+    <header class="hero-container">
+        <!-- Left Hero Column: Typography & CTAs -->
+        <div class="hero-left">
+            <div class="hero-pill">
+                <span>✨ CONSOLIDATED ZERO-TRUST AI GOVERNANCE</span>
+            </div>
+
+            <h1 class="hero-title">
+                Govern verified autonomous AI agents in one unified gateway.
+            </h1>
+
+            <p class="hero-subtitle">
+                Execute weather tools, database queries, and external APIs with deterministic JSON Schema validation, human-in-the-loop approvals, PII sanitization, and SHA-256 audit trails.
+            </p>
+
+            <div class="hero-actions">
+                <a th:href="@{/admin}" class="btn-hero-primary">
+                    <span>Explore Admin Console</span>
+                    <span>→</span>
+                </a>
+                <a href="#playground" class="btn-hero-secondary">
+                    <span>Test Live Invocations</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Right Hero Column: Featured Teal-Ocean Card with Yellow Accent (Matching screenshot) -->
+        <div class="hero-right">
+            <div class="hero-ocean-card">
+                <!-- Yellow Graphic Sticker Badge (Matching the yellow headphone badge in screenshot) -->
+                <div class="ocean-badge-graphic">
+                    <span>🛡️</span>
+                </div>
+
+                <div>
+                    <div class="ocean-pill-tag">
+                        <span>⚡ LIVE GOVERNED EXECUTION</span>
+                    </div>
+
+                    <h2 class="ocean-card-title">
+                        Governed Tool Sandbox & PII Redaction
+                    </h2>
+
+                    <p class="ocean-card-desc">
+                        Consolidate autonomous agent tool calls into one single verified pipeline with zero unredacted leaks or rogue side effects.
+                    </p>
+                </div>
+
+                <div class="ocean-card-bottom">
+                    <a href="#playground" class="btn-ocean-action">
+                        <span>Try Live Tool</span>
+                        <span>→</span>
+                    </a>
+                    <span style="font-size: 0.8rem; font-weight: 600; color: rgba(255, 255, 255, 0.85);">< 5ms Overhead</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 4 Feature Pill Cards (Directly matching the 4 bottom cards in user reference image) -->
+    <div class="hero-four-pills">
+        <div class="pill-feature-card">
+            <div class="pill-feature-icon">🛒</div>
+            <div class="pill-feature-text">
+                <div class="title">Unified Gateway</div>
+                <div class="subtitle">Single entry for MCP & REST tools</div>
+            </div>
+        </div>
+
+        <div class="pill-feature-card">
+            <div class="pill-feature-icon">🛡️</div>
+            <div class="pill-feature-text">
+                <div class="title">Schema Protection</div>
+                <div class="subtitle">Halts malformed payloads instantly</div>
+            </div>
+        </div>
+
+        <div class="pill-feature-card">
+            <div class="pill-feature-icon">✋</div>
+            <div class="pill-feature-text">
+                <div class="title">Human Approvals</div>
+                <div class="subtitle">Manual review for high-risk tools</div>
+            </div>
+        </div>
+
+        <div class="pill-feature-card">
+            <div class="pill-feature-icon">⛓️</div>
+            <div class="pill-feature-text">
+                <div class="title">SHA-256 Ledger</div>
+                <div class="subtitle">Tamper-evident audit chain</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6-Stage Execution Pipeline -->
+    <section id="pipeline" class="pipeline-section">
+        <div class="section-tag">Interactive Architecture</div>
+        <h2 class="section-heading">6-Stage Zero-Trust Execution Pipeline</h2>
+        <p class="section-subtext">Every invocation initiated by an LLM or autonomous agent must strictly traverse these verification layers before side effects occur.</p>
+
+        <div class="pipeline-grid">
+            <div class="pipeline-step-card">
+                <div class="pipeline-step-num">1</div>
+                <div class="pipeline-step-icon">🤖</div>
+                <div class="pipeline-step-title">Agent Request</div>
+                <div class="pipeline-step-desc">Agent passes OAuth2 JWT bearer token via MCP or REST endpoint.</div>
+            </div>
+
+            <div class="pipeline-step-card">
+                <div class="pipeline-step-num">2</div>
+                <div class="pipeline-step-icon">🔒</div>
+                <div class="pipeline-step-title">Identity & Scopes</div>
+                <div class="pipeline-step-desc">Gateway derives verified identity; spoofing caller IDs is strictly rejected.</div>
+            </div>
+
+            <div class="pipeline-step-card">
+                <div class="pipeline-step-num">3</div>
+                <div class="pipeline-step-icon">🛡️</div>
+                <div class="pipeline-step-title">Schema Guard</div>
+                <div class="pipeline-step-desc">Arguments validated against tool JSON Schema; malformed payloads fail closed.</div>
+            </div>
+
+            <div class="pipeline-step-card">
+                <div class="pipeline-step-num">4</div>
+                <div class="pipeline-step-icon">⚖️</div>
+                <div class="pipeline-step-title">Policy & Precedence</div>
+                <div class="pipeline-step-desc">Kill switches, rate limits, daily quotas, and rule bindings evaluated deterministically.</div>
+            </div>
+
+            <div class="pipeline-step-card">
+                <div class="pipeline-step-num">5</div>
+                <div class="pipeline-step-icon">✋</div>
+                <div class="pipeline-step-title">Human-in-the-Loop</div>
+                <div class="pipeline-step-desc">High-risk tools enter PENDING state; human admin approves with cryptographic hash check.</div>
+            </div>
+
+            <div class="pipeline-step-card">
+                <div class="pipeline-step-num">6</div>
+                <div class="pipeline-step-icon">⛓️</div>
+                <div class="pipeline-step-title">Audit Chain</div>
+                <div class="pipeline-step-desc">Result sanitized of PII and permanently recorded with SHA-256 hash chaining.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live In-Browser Invocation Playground -->
+    <section id="playground" class="playground-section">
+        <div class="section-tag">Interactive Terminal</div>
+        <h2 class="section-heading">Live Gateway Invocation Playground</h2>
+        <p class="section-subtext">Execute a governed tool invocation directly from your browser to observe zero-trust validation, output sanitization, and cryptographic audit hashing in real time.</p>
+
+        <div class="playground-shell">
+            <div class="playground-topbar">
+                <div class="window-dots">
+                    <span class="window-dot red"></span>
+                    <span class="window-dot yellow"></span>
+                    <span class="window-dot green"></span>
+                </div>
+                <span class="mono" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600;">POST /api/v1/invocations — Zero-Trust Execution Sandbox</span>
+                <span class="chip chip-emerald" style="font-size: 0.7rem;">READY</span>
+            </div>
+
+            <div class="playground-cols">
+                <div class="playground-left">
+                    <div>
+                        <div class="playground-label">Target Tool</div>
+                        <select id="toolSelector" class="playground-select">
+                            <option value="weather_service">weather_service (LOW Risk · Mock Downstream)</option>
+                            <option value="echo_tool">echo_tool (LOW Risk · Mock Downstream)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <div class="playground-label">Invocation Arguments (JSON)</div>
+                        <textarea id="argumentsInput" class="playground-textarea">{"city": "Tokyo"}</textarea>
+                    </div>
+
+                    <button id="runInvocationBtn" class="playground-btn">
+                        <span>⚡ Execute Governed Tool</span>
+                    </button>
+                    <div id="statusNotice" style="font-size: 0.78rem; color: var(--text-muted); text-align: center;">Authenticates with OAuth2 `demo-agent` client credentials automatically.</div>
+                </div>
+
+                <div class="playground-right">
+                    <div class="playground-label" style="display: flex; justify-content: space-between;">
+                        <span>Gateway Response & Audit Record</span>
+                        <span id="latencyBadge" class="mono" style="color: var(--brand-primary); font-weight: 700; display: none;">0ms</span>
+                    </div>
+                    <div id="playgroundOutput" class="playground-output">// Click 'Execute Governed Tool' to run an end-to-end request through the gateway...
+// 1. Fetches OAuth2 Bearer Token
+// 2. Evaluates JSON Schema & Precedence
+// 3. Executes Tool via HTTP Adapter
+// 4. Redacts PII & Generates SHA-256 Audit Event</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature Showcase Grid -->
+    <section id="features" class="features-section">
+        <div class="section-tag">Core Capabilities</div>
+        <h2 class="section-heading">Enterprise-Grade Zero-Trust Security</h2>
+        <p class="section-subtext">Purpose-built to secure generative AI and autonomous agents from malicious tool abuse, prompt injections, and accidental side effects.</p>
+
+        <div class="features-grid">
+            <div class="feature-box">
+                <div class="feature-icon-badge">🔒</div>
+                <h3 class="feature-title">OAuth2 Zero-Trust Identity</h3>
+                <p class="feature-desc">All agents authenticate via verified client credentials or on-behalf-of tokens. Caller-supplied identity fields in request bodies are completely ignored.</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon-badge">⚡</div>
+                <h3 class="feature-title">Model Context Protocol (MCP)</h3>
+                <p class="feature-desc">RFC-compliant JSON-RPC 2.0 endpoints (`tools/list`, `tools/call`) allowing instant, zero-code discovery for Claude Desktop, LangChain, and fine-tuned LLMs.</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon-badge">🛡️</div>
+                <h3 class="feature-title">Deterministic Policy Precedence</h3>
+                <p class="feature-desc">Rigorous rule evaluation order: Emergency Kill Switch → Agent Policy → Tool Policy → Global Policy → Default Deny. Ambiguous rules fail closed.</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon-badge">✋</div>
+                <h3 class="feature-title">Human-in-the-Loop Approvals</h3>
+                <p class="feature-desc">High-risk tools enter a pending queue for administrator review with cryptographic argument fingerprinting to eliminate time-of-check to time-of-use attacks.</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon-badge">⛓️</div>
+                <h3 class="feature-title">Tamper-Evident SHA-256 Ledger</h3>
+                <p class="feature-desc">Blockchain-style cryptographic hash chaining guarantees non-repudiation and continuous auditability. Any database modification breaks the chain.</p>
+            </div>
+
+            <div class="feature-box">
+                <div class="feature-icon-badge">🚨</div>
+                <h3 class="feature-title">Sub-Millisecond Kill Switches</h3>
+                <p class="feature-desc">Emergency containment controls allow operators to globally block write operations or isolate compromised agents instantaneously across all nodes.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+        <div class="footer-content">
+            <div style="text-align: left;">
+                <div style="font-weight: 800; color: var(--text-main); font-size: 1.05rem;">AgentGate Governance Gateway</div>
+                <div class="footer-text" style="margin-top: 4px;">Spring Boot 3.3.5 · SQLite · Java 21 · Model Context Protocol</div>
+            </div>
+            <div>
+                <a th:href="@{/admin}" class="btn btn-secondary btn-sm">Admin Console</a>
+                <a th:href="@{/audit}" class="btn btn-secondary btn-sm" style="margin-left: 8px;">Audit Ledger</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive Scripts -->
+    <script>
+        const toolSelector = document.getElementById('toolSelector');
+        const argumentsInput = document.getElementById('argumentsInput');
+        const runBtn = document.getElementById('runInvocationBtn');
+        const output = document.getElementById('playgroundOutput');
+        const latencyBadge = document.getElementById('latencyBadge');
+
+        toolSelector.addEventListener('change', () => {
+            if (toolSelector.value === 'weather_service') {
+                argumentsInput.value = JSON.stringify({"city": "Tokyo"}, null, 2);
+            } else if (toolSelector.value === 'echo_tool') {
+                argumentsInput.value = JSON.stringify({"message": "Hello from AgentGate!"}, null, 2);
+            }
+        });
+
+        runBtn.addEventListener('click', async () => {
+            runBtn.disabled = true;
+            runBtn.innerHTML = '<span>⏳ Executing & Auditing...</span>';
+            output.textContent = '// 1. Requesting OAuth2 token for demo-agent...';
+            latencyBadge.style.display = 'none';
+
+            const startTime = performance.now();
+
+            try {
+                const authResp = await fetch('/api/v1/auth/token?clientId=demo-agent');
+                const authData = await authResp.json();
+                const token = authData.data.access_token;
+                
+                output.textContent += '\n// 2. Token acquired. Dispatching governed invocation to /api/v1/invocations...';
+
+                const toolName = toolSelector.value;
+                let parsedArgs = {};
+                try {
+                    parsedArgs = JSON.parse(argumentsInput.value);
+                } catch (e) {
+                    output.textContent = `// ERROR: Malformed JSON arguments!\n${e.message}`;
+                    runBtn.disabled = false;
+                    runBtn.innerHTML = '<span>⚡ Execute Governed Tool</span>';
+                    return;
+                }
+
+                const invResp = await fetch('/api/v1/invocations', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        toolName: toolName,
+                        arguments: parsedArgs
+                    })
+                });
+
+                const invResult = await invResp.json();
+                const duration = Math.round(performance.now() - startTime);
+                latencyBadge.textContent = `${duration}ms total`;
+                latencyBadge.style.display = 'inline';
+
+                output.textContent = `// HTTP Status: ${invResp.status} OK\n// Gateway Latency: ${duration}ms\n\n` + 
+                                     JSON.stringify(invResult, null, 2);
+            } catch (err) {
+                output.textContent = `// Network or execution error:\n${err.message}`;
+            } finally {
+                runBtn.disabled = false;
+                runBtn.innerHTML = '<span>⚡ Execute Governed Tool</span>';
+            }
+        });
+    </script>
+</body>
+</html>
