@@ -580,40 +580,46 @@ AgentGate enforces non-negotiable security guarantees:
 
 ```text
 AgentGate_Antigravity_Starter/
-├── .agent/                             # Agent workflows, rules, and phase prompts
-│   ├── phase-prompts/                  # Phase 0 through Phase 6 specifications
-│   ├── workflows/                      # Phased execution workflow
-│   └── rules.md                        # Mandatory coding and architectural rules
-├── docs/                               # Comprehensive project documentation
-│   ├── diagrams/                       # Diagram assets (Original & Clean SVGs)
-│   │   ├── architecture_clean.svg      # Clean, publication-quality Architecture SVG
-│   │   ├── erd_clean.svg               # Clean, publication-quality Data Model ERD SVG
-│   │   ├── architecture.png            # Original reference architecture
-│   │   └── erd.png                     # Original reference ERD
+├── docs/                               # Comprehensive project architecture & ADRs
+│   ├── adr/                            # Architecture Decision Records (ADR-0001 to ADR-0008)
+│   ├── diagrams/                       # High-resolution architectural and ERD diagrams
 │   ├── API_CONVENTIONS.md              # REST DTOs, ApiResponse, error handling
 │   ├── ARCHITECTURE.md                 # System architecture baseline & boundaries
 │   ├── DATA_MODEL.md                   # Relational semantics & schema baseline
 │   ├── IMPLEMENTATION_TRACKER.md       # Phase progress tracking
 │   ├── MEMORY.md                       # Durable project memory & functional requirements
+│   ├── ONBOARDING_GUIDE.md             # Developer setup and onboarding runbook
+│   ├── PRD.md                          # Product Requirements Document
+│   ├── QA_ACCEPTANCE_EVIDENCE.md       # Acceptance benchmarks QA1-QA5
+│   ├── RUNBOOK.md                      # Operational & deployment procedures
 │   ├── SECURITY.md                     # Security invariants and defensive checks
-│   └── TESTING.md                      # Verification strategy & QA acceptance criteria
-├── src/                                # Spring Boot application source (Planned)
-│   ├── main/java/com/agentgate/
-│   │   ├── agent/                      # Agent identity and credentials
-│   │   ├── approval/                   # Human approval state machine
-│   │   ├── audit/                      # Cryptographic audit hash chain
-│   │   ├── health/                     # Resilience4j circuit breakers & probes
-│   │   ├── invocation/                 # Invocation lifecycle and orchestration
-│   │   ├── killswitch/                 # Emergency trip switches
-│   │   ├── outbox/                     # Transactional outbox dispatcher
-│   │   ├── policy/                     # Declarative policy engine
-│   │   ├── quota/                      # Daily spend and rate quotas
-│   │   ├── security/                   # OAuth2 security filter chain
-│   │   ├── shared/                     # Common records, DTOs, and exceptions
-│   │   └── tool/                       # Tool registry, MCP & REST adapters
-│   └── main/resources/
-│       ├── db/migration/               # Flyway SQL migrations
-│       └── templates/                  # Thymeleaf administration pages
+│   ├── TESTING.md                      # Verification strategy & QA acceptance criteria
+│   └── TRD.md                          # Technical Requirements Document
+├── src/                                # Spring Boot enterprise modular monolith source
+│   ├── main/
+│   │   ├── java/com/agentgate/
+│   │   │   ├── admin/                  # Web administration controller & endpoints
+│   │   │   ├── agent/                  # Agent identity and credentials
+│   │   │   ├── alert/                  # Security alerts and incident logging
+│   │   │   ├── approval/               # Human approval state machine
+│   │   │   ├── audit/                  # Cryptographic audit hash chain
+│   │   │   ├── health/                 # Resilience4j circuit breakers & health probes
+│   │   │   ├── invocation/             # Invocation lifecycle and guard pipeline
+│   │   │   ├── killswitch/             # Emergency trip switches
+│   │   │   ├── observability/          # Micrometer gateway metrics and telemetry
+│   │   │   ├── outbox/                 # Transactional outbox dispatcher
+│   │   │   ├── policy/                 # Declarative policy engine and AST evaluation
+│   │   │   ├── quota/                  # Daily spend and rate quotas (Redis Lua)
+│   │   │   ├── security/               # OAuth2 security filter chain & tokens
+│   │   │   ├── shared/                 # Common records, DTOs, and global exceptions
+│   │   │   └── tool/                   # Tool registry, MCP & REST adapters
+│   │   └── resources/
+│   │       ├── db/migration/           # Flyway SQL migrations
+│   │       ├── static/css/             # Bespoke zero-trust design system CSS
+│   │       └── templates/              # Thymeleaf administration pages
+│   └── test/                           # Comprehensive test suite (Acceptance, Security, Resilience)
+├── pom.xml                             # Maven build configuration
+├── docker-compose.yml                  # Infrastructure container definitions (PostgreSQL, Redis)
 └── README.md                           # Main repository documentation
 ```
 
