@@ -22,7 +22,7 @@
                             <span class="mono" style="font-size: 1rem; font-weight: 700; color: #fff;" th:text="'Approval Request #' + ${appr.approvalId}">#1</span>
                             <span class="chip chip-amber" style="margin-left: 8px;">PENDING</span>
                         </div>
-                        <div class="mono" style="font-size: 0.8rem; color: var(--text-muted);" th:text="'Expires: ' + ${#temporals.format(appr.expiresAt, 'HH:mm:ss')}">Expires</div>
+                        <div class="mono" style="font-size: 0.8rem; color: var(--text-muted);" th:text="'Expires: ' + (${appr.expiresAt != null ? #temporals.format(appr.expiresAt, 'HH:mm:ss') : '—'})">Expires</div>
                     </div>
                     
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; font-size: 0.85rem;">
@@ -36,7 +36,9 @@
                         </div>
                         <div>
                             <span style="color: var(--text-muted);">Risk Level:</span>
-                            <span class="chip chip-rose" th:text="${appr.invocation?.tool?.riskLevel != null ? appr.invocation.tool.riskLevel : 'UNKNOWN'}">HIGH</span>
+                            <span class="chip"
+                                  th:classappend="${appr.invocation?.tool?.riskLevel != null && (appr.invocation.tool.riskLevel.name() == 'HIGH' || appr.invocation.tool.riskLevel.name() == 'CRITICAL') ? 'chip-rose' : (appr.invocation?.tool?.riskLevel != null && appr.invocation.tool.riskLevel.name() == 'MEDIUM' ? 'chip-amber' : 'chip-emerald')}"
+                                  th:text="${appr.invocation?.tool?.riskLevel != null ? appr.invocation.tool.riskLevel : 'LOW'}">HIGH</span>
                         </div>
                     </div>
 
@@ -89,12 +91,12 @@
                             <td class="mono" th:text="${item.invocation?.tool?.name != null ? item.invocation.tool.name : '—'}">tool</td>
                             <td>
                                 <span class="chip"
-                                      th:classappend="${item.status.name() == 'APPROVED' ? 'chip-emerald' : (item.status.name() == 'REJECTED' ? 'chip-rose' : (item.status.name() == 'PENDING' ? 'chip-amber' : 'chip-indigo'))}"
-                                      th:text="${item.status}">APPROVED</span>
+                                      th:classappend="${item.status != null && item.status.name() == 'APPROVED' ? 'chip-emerald' : (item.status != null && item.status.name() == 'REJECTED' ? 'chip-rose' : (item.status != null && item.status.name() == 'PENDING' ? 'chip-amber' : 'chip-indigo'))}"
+                                      th:text="${item.status != null ? item.status : 'UNKNOWN'}">APPROVED</span>
                             </td>
                             <td class="mono" th:text="${item.approverId != null ? item.approverId : (item.decidedBy != null ? item.decidedBy : '—')}">—</td>
                             <td th:text="${item.decisionReason != null ? item.decisionReason : '—'}">—</td>
-                            <td th:text="${#temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm')}">2026-11-21 00:00</td>
+                            <td th:text="${item.createdAt != null ? #temporals.format(item.createdAt, 'yyyy-MM-dd HH:mm') : '—'}">2026-11-21 00:00</td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(allApprovals)}">
                             <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">

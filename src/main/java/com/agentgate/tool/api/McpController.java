@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,6 +52,22 @@ public class McpController {
         this.healthManager = healthManager;
         this.invocationService = invocationService;
         this.objectMapper = objectMapper;
+    }
+
+    @GetMapping
+    public ResponseEntity<Map<String, Object>> getMcpInfo() {
+        return ResponseEntity.ok(Map.of(
+                "jsonrpc", "2.0",
+                "status", "UP",
+                "protocolVersion", "2024-11-05",
+                "serverInfo", Map.of(
+                        "name", "AgentGate Governance Gateway",
+                        "version", "1.0.0"
+                ),
+                "capabilities", Map.of(
+                        "tools", Map.of("listChanged", true)
+                )
+        ));
     }
 
     @PostMapping

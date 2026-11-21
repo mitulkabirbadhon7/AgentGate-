@@ -11,8 +11,12 @@ import com.agentgate.shared.api.ErrorCode;
 import com.agentgate.shared.exception.AgentGateException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/invocations")
@@ -42,6 +46,19 @@ public class InvocationController {
 
         InvocationDTOs.InvocationResponse response = invocationService.invokeTool(request, securityContext);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<InvocationDTOs.InvocationResponse>>> listRecentInvocations(
+            @RequestParam(defaultValue = "50") int limit) {
+        int pageLimit = Math.min(Math.max(limit, 1), 100);
+        List<InvocationDTOs.InvocationResponse> invocations = invocationRepository.findAll(
+                PageRequest.of(0, pageLimit, Sort.by(Sort.Direction.DESC, "createdAt")))
+                .getContent()
+                .stream()
+                .map(InvocationDTOs.InvocationResponse::from)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.ok(invocations));
     }
 
     @GetMapping("/{invocationId}")

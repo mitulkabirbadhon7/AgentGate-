@@ -7,6 +7,7 @@ Write-Host "==========================================================" -Foregro
 
 $baseUrl = "http://localhost:8080"
 $ErrorActionPreference = "Stop"
+$failedChecks = 0
 
 # 1. Connectivity Check
 Write-Host "`n[1/8] Checking server connectivity..." -ForegroundColor Yellow
@@ -16,6 +17,7 @@ try {
         Write-Host "  [OK] Server is UP at $baseUrl" -ForegroundColor Green
     } else {
         Write-Host "  [WARN] Server responded with status: $($health.status)" -ForegroundColor Yellow
+        $failedChecks++
     }
 } catch {
     Write-Host "`n  [ERROR] Unable to connect to AgentGate server at $baseUrl" -ForegroundColor Red
@@ -35,9 +37,11 @@ foreach ($route in $webRoutes) {
             Write-Host "  [OK] GET $route -> 200 OK (Rendered cleanly)" -ForegroundColor Green
         } else {
             Write-Host "  [WARN] GET $route -> HTTP $($resp.StatusCode)" -ForegroundColor Yellow
+            $failedChecks++
         }
     } catch {
         Write-Host "  [FAIL] GET $route -> $($_.Exception.Message)" -ForegroundColor Red
+        $failedChecks++
     }
 }
 
@@ -50,10 +54,12 @@ try {
         Write-Host "  [OK] Token acquired successfully (Expires in: $($tokenResp.data.expires_in)s)" -ForegroundColor Green
     } else {
         Write-Host "  [FAIL] No access_token returned" -ForegroundColor Red
+        $failedChecks++
         exit 1
     }
 } catch {
     Write-Host "  [FAIL] Token acquisition failed: $($_.Exception.Message)" -ForegroundColor Red
+    $failedChecks++
     exit 1
 }
 
@@ -75,15 +81,23 @@ try {
     Write-Host "  [OK] GET /api/v1/tools -> Found $($tools.data.Count) registered tool(s)" -ForegroundColor Green
 } catch {
     Write-Host "  [FAIL] REST queries failed: $($_.Exception.Message)" -ForegroundColor Red
+    $failedChecks++
 }
 
 # 5. Verify Mock Downstream Service
-Write-Host "`n[5/8] Testing downstream mock service..." -ForegroundColor Yellow
+Write-Host "`n[5/8] Testing downstream mock service (GET & POST)..." -ForegroundColor Yellow
 try {
-    $mockResp = Invoke-RestMethod -Uri "$baseUrl/api/v1/mock/weather" -Method Post -ContentType "application/json" -Body '{"city":"London"}'
-    Write-Host "  [OK] POST /api/v1/mock/weather -> Weather in $($mockResp.city): $($mockResp.temperature_c)C, $($mockResp.condition)" -ForegroundColor Green
+    $mockPostResp = Invoke-RestMethod -Uri "$baseUrl/api/v1/mock/weather" -Method Post -ContentType "application/json" -Body '{"city":"London"}'
+    Write-Host "  [OK] POST /api/v1/mock/weather -> Weather in $($mockPostResp.city): $($mockPostResp.temperature_c)C, $($mockPostResp.condition)" -ForegroundColor Green
+
+    $mockGetResp = Invoke-RestMethod -Uri "$baseUrl/api/v1/mock/weather?city=Paris" -Method Get
+    Write-Host "  [OK] GET /api/v1/mock/weather -> Weather in $($mockGetResp.city): $($mockGetResp.temperature_c)C, $($mockGetResp.condition)" -ForegroundColor Green
+
+    $mockEchoResp = Invoke-RestMethod -Uri "$baseUrl/api/v1/mock/echo" -Method Get
+    Write-Host "  [OK] GET /api/v1/mock/echo -> Status: $($mockEchoResp.status)" -ForegroundColor Green
 } catch {
     Write-Host "  [FAIL] Mock service error: $($_.Exception.Message)" -ForegroundColor Red
+    $failedChecks++
 }
 
 # 6. Verify Governed Tool Invocation
@@ -96,19 +110,27 @@ try {
 
     $invResp = Invoke-RestMethod -Uri "$baseUrl/api/v1/invocations" -Headers $headers -Method Post -Body $invBody
     Write-Host "  [OK] POST /api/v1/invocations -> Status: $($invResp.data.status), Tool: $($invResp.data.toolName)" -ForegroundColor Green
+
+    $invList = Invoke-RestMethod -Uri "$baseUrl/api/v1/invocations?limit=5" -Headers $headers -Method Get
+    Write-Host "  [OK] GET /api/v1/invocations -> Retrieved $($invList.data.Count) recent invocation record(s)" -ForegroundColor Green
 } catch {
     Write-Host "  [FAIL] Tool invocation failed: $($_.Exception.Message)" -ForegroundColor Red
+    $failedChecks++
 }
 
 # 7. Verify MCP Protocol Endpoint
 Write-Host "`n[7/8] Testing MCP JSON-RPC protocol endpoint..." -ForegroundColor Yellow
 try {
+    $mcpInfo = Invoke-RestMethod -Uri "$baseUrl/mcp" -Headers $headers -Method Get
+    Write-Host "  [OK] GET /mcp -> Protocol: $($mcpInfo.protocolVersion), Server: $($mcpInfo.serverInfo.name)" -ForegroundColor Green
+
     $mcpBody = '{"jsonrpc":"2.0","method":"tools/list","id":1}'
     $mcpResp = Invoke-RestMethod -Uri "$baseUrl/mcp" -Headers $headers -Method Post -Body $mcpBody
     $mcpToolCount = $mcpResp.result.tools.Count
     Write-Host "  [OK] POST /mcp (tools/list) -> Discovered $mcpToolCount tool(s) via MCP" -ForegroundColor Green
 } catch {
     Write-Host "  [FAIL] MCP protocol check failed: $($_.Exception.Message)" -ForegroundColor Red
+    $failedChecks++
 }
 
 # 8. Verify Audit Chain
@@ -119,11 +141,21 @@ try {
         Write-Host "  [OK] Audit verification: $($auditResp.message) ($($auditResp.data.eventsChecked) events checked)" -ForegroundColor Green
     } else {
         Write-Host "  [WARN] Audit integrity warning: $($auditResp.message)" -ForegroundColor Yellow
+        $failedChecks++
     }
 } catch {
     Write-Host "  [FAIL] Audit verification failed: $($_.Exception.Message)" -ForegroundColor Red
+    $failedChecks++
 }
 
-Write-Host "`n==========================================================" -ForegroundColor Cyan
-Write-Host "         All AgentGate Gateway Checks Completed!          " -ForegroundColor Green
-Write-Host "==========================================================`n" -ForegroundColor Cyan
+if ($failedChecks -gt 0) {
+    Write-Host "`n==========================================================" -ForegroundColor Red
+    Write-Host "  Verification Completed with $failedChecks Warning/Failure(s)! " -ForegroundColor Red
+    Write-Host "==========================================================`n" -ForegroundColor Red
+    exit 1
+} else {
+    Write-Host "`n==========================================================" -ForegroundColor Cyan
+    Write-Host "         All AgentGate Gateway Checks Completed!          " -ForegroundColor Green
+    Write-Host "==========================================================`n" -ForegroundColor Cyan
+    exit 0
+}

@@ -38,6 +38,7 @@ import java.util.UUID;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -296,11 +297,28 @@ class AdminWebRoutesIntegrationTests {
                         .content("{\"msg\":\"hello\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("success"));
+
+        // GET mock endpoints
+        mockMvc.perform(get("/api/v1/mock/weather").param("city", "Paris"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.city").value("Paris"))
+                .andExpect(jsonPath("$.status").value("success"));
+
+        mockMvc.perform(get("/api/v1/mock/echo").param("message", "ping"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"));
     }
 
     @Test
-    @DisplayName("MCP JSON-RPC discovery endpoints work as expected")
+    @DisplayName("MCP JSON-RPC discovery and metadata endpoints work as expected")
     void testMcpEndpoints() throws Exception {
+        // GET /mcp info
+        mockMvc.perform(get("/mcp")
+                        .header("Authorization", validToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.protocolVersion").value("2024-11-05"))
+                .andExpect(jsonPath("$.status").value("UP"));
+
         // initialize
         mockMvc.perform(post("/mcp")
                         .header("Authorization", validToken)
@@ -316,6 +334,41 @@ class AdminWebRoutesIntegrationTests {
                         .content("{\"jsonrpc\":\"2.0\",\"id\":\"list-1\",\"method\":\"tools/list\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.tools").isArray());
+    }
+
+    @Test
+    @DisplayName("Invocations GET endpoint lists recent governed calls")
+    void testInvocationsListEndpoint() throws Exception {
+        mockMvc.perform(get("/api/v1/invocations")
+                        .header("Authorization", validToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data").isArray());
+    }
+
+    @Test
+    @DisplayName("Global exception handler produces clean ApiError responses for client errors")
+    void testGlobalExceptionHandlers() throws Exception {
+        // 405 Method Not Allowed
+        mockMvc.perform(put("/api/v1/tools")
+                        .header("Authorization", validToken))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+
+        // 400 Bad Request on type mismatch
+        mockMvc.perform(get("/api/v1/tools/invalid-id-format")
+                        .header("Authorization", validToken))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+
+        // 400 Bad Request on malformed JSON
+        mockMvc.perform(post("/api/v1/invocations")
+                        .header("Authorization", validToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{invalid-json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success").value(false));
     }
 
     @Test

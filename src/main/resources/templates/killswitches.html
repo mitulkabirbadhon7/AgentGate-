@@ -66,24 +66,24 @@
                         <tr th:each="ks : ${killSwitches}">
                             <td>
                                 <span class="chip" 
-                                      th:classappend="${ks.scope.name() == 'GLOBAL_WRITES' ? 'chip-rose' : (ks.scope.name() == 'AGENT' ? 'chip-amber' : 'chip-indigo')}"
-                                      th:text="${ks.scope}">GLOBAL_WRITES</span>
+                                      th:classappend="${ks.scope != null && ks.scope.name() == 'GLOBAL_WRITES' ? 'chip-rose' : (ks.scope != null && ks.scope.name() == 'AGENT' ? 'chip-amber' : 'chip-indigo')}"
+                                      th:text="${ks.scope != null ? ks.scope : 'UNKNOWN'}">GLOBAL_WRITES</span>
                             </td>
                             <td class="mono" th:text="${ks.targetId != null ? ks.targetId : 'ALL WRITES'}">ALL</td>
                             <td>
-                                <span class="chip" th:classappend="${ks.status.name() == 'ACTIVE' ? 'chip-rose' : 'chip-emerald'}" th:text="${ks.status}">ACTIVE</span>
+                                <span class="chip" th:classappend="${ks.status != null && ks.status.name() == 'ACTIVE' ? 'chip-rose' : 'chip-emerald'}" th:text="${ks.status != null ? ks.status : 'RESET'}">ACTIVE</span>
                             </td>
-                            <td th:text="${ks.reason}">Reason</td>
-                            <td class="mono" th:text="${ks.adminId}">admin</td>
-                            <td th:text="${#temporals.format(ks.activatedAt, 'yyyy-MM-dd HH:mm:ss')}">2026-11-21 00:00:00</td>
+                            <td th:text="${ks.reason != null ? ks.reason : '—'}">Reason</td>
+                            <td class="mono" th:text="${ks.adminId != null ? ks.adminId : '—'}">admin</td>
+                            <td th:text="${ks.activatedAt != null ? #temporals.format(ks.activatedAt, 'yyyy-MM-dd HH:mm:ss') : '—'}">2026-11-21 00:00:00</td>
                             <td>
-                                <form th:if="${ks.status.name() == 'ACTIVE'}" th:action="@{/killswitches/reset}" method="post" style="display:inline;">
+                                <form th:if="${ks.status != null && ks.status.name() == 'ACTIVE'}" th:action="@{/killswitches/reset}" method="post" style="display:inline;">
                                     <input type="hidden" name="killSwitchId" th:value="${ks.killSwitchId}">
                                     <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--accent-emerald); border-color: rgba(16, 185, 129, 0.3);">
                                         Reset Switch
                                     </button>
                                 </form>
-                                <span th:if="${ks.status.name() != 'ACTIVE'}" style="color: var(--text-muted); font-size: 0.8rem;">Deactivated</span>
+                                <span th:if="${ks.status == null || ks.status.name() != 'ACTIVE'}" style="color: var(--text-muted); font-size: 0.8rem;">Deactivated</span>
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(killSwitches)}">

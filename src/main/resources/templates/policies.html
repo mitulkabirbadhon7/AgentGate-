@@ -62,8 +62,8 @@
                                 <tr th:each="b : ${bindings}">
                                     <td>
                                         <span class="chip" 
-                                              th:classappend="${b.scope.name() == 'AGENT_TOOL' ? 'chip-rose' : (b.scope.name() == 'TOOL' ? 'chip-amber' : (b.scope.name() == 'AGENT' ? 'chip-indigo' : 'chip-emerald'))}"
-                                              th:text="${b.scope}">GLOBAL</span>
+                                              th:classappend="${b.scope != null && b.scope.name() == 'AGENT_TOOL' ? 'chip-rose' : (b.scope != null && b.scope.name() == 'TOOL' ? 'chip-amber' : (b.scope != null && b.scope.name() == 'AGENT' ? 'chip-indigo' : 'chip-emerald'))}"
+                                              th:text="${b.scope != null ? b.scope : 'GLOBAL'}">GLOBAL</span>
                                     </td>
                                     <td th:text="${b.policy != null ? b.policy.name : '—'}">Policy Name</td>
                                     <td class="mono" th:text="${b.priority}">100</td>

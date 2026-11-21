@@ -29,13 +29,13 @@
                     </thead>
                     <tbody>
                         <tr th:each="server : ${servers}">
-                            <td class="mono" style="font-weight: 600; color: #fff;" th:text="${server.name}">Server 1</td>
+                            <td class="mono" style="font-weight: 600; color: #fff;" th:text="${server.name != null ? server.name : '—'}">Server 1</td>
                             <td>
-                                <span class="chip" th:classappend="${server.type.name() == 'MCP' ? 'chip-emerald' : 'chip-indigo'}" th:text="${server.type}">REST</span>
+                                <span class="chip" th:classappend="${server.type != null && server.type.name() == 'MCP' ? 'chip-emerald' : 'chip-indigo'}" th:text="${server.type != null ? server.type : 'REST'}">REST</span>
                             </td>
-                            <td class="mono" th:text="${server.endpointUrl}">http://localhost:8080</td>
-                            <td th:text="${server.healthCheckIntervalSec} + 's'">30s</td>
-                            <td th:text="${server.circuitOpenThreshold} + ' failures'">5 failures</td>
+                            <td class="mono" th:text="${server.endpointUrl != null ? server.endpointUrl : '—'}">http://localhost:8080</td>
+                            <td th:text="${server.healthCheckIntervalSec != null ? server.healthCheckIntervalSec + 's' : '—'}">30s</td>
+                            <td th:text="${server.circuitOpenThreshold != null ? server.circuitOpenThreshold + ' failures' : '—'}">5 failures</td>
                             <td>
                                 <span class="chip chip-emerald">HEALTHY</span>
                             </td>
@@ -69,16 +69,18 @@
                     </thead>
                     <tbody>
                         <tr th:each="tool : ${tools}">
-                            <td class="mono" style="font-weight: 600; color: #a5b4fc;" th:text="${tool.name}">refund_tool</td>
+                            <td class="mono" style="font-weight: 600; color: #a5b4fc;" th:text="${tool.name != null ? tool.name : '—'}">refund_tool</td>
                             <td th:text="${tool.server != null ? tool.server.name : '—'}">billing-server</td>
                             <td>
                                 <span class="chip"
-                                      th:classappend="${tool.riskLevel.name() == 'HIGH' ? 'chip-rose' : (tool.riskLevel.name() == 'MEDIUM' ? 'chip-amber' : 'chip-emerald')}"
-                                      th:text="${tool.riskLevel}">LOW</span>
+                                      th:classappend="${tool.riskLevel != null && (tool.riskLevel.name() == 'HIGH' || tool.riskLevel.name() == 'CRITICAL') ? 'chip-rose' : (tool.riskLevel != null && tool.riskLevel.name() == 'MEDIUM' ? 'chip-amber' : 'chip-emerald')}"
+                                      th:text="${tool.riskLevel != null ? tool.riskLevel : 'LOW'}">LOW</span>
                             </td>
-                            <td class="mono" th:text="${tool.routingHint}">POST /refund</td>
+                            <td class="mono" th:text="${tool.routingHint != null ? tool.routingHint : '—'}">POST /refund</td>
                             <td>
-                                <span class="chip chip-emerald" th:text="${tool.status}">ACTIVE</span>
+                                <span class="chip"
+                                      th:classappend="${tool.status != null && tool.status.name() == 'ACTIVE' ? 'chip-emerald' : (tool.status != null && tool.status.name() == 'DEPRECATED' ? 'chip-amber' : 'chip-rose')}"
+                                      th:text="${tool.status != null ? tool.status : 'ACTIVE'}">ACTIVE</span>
                             </td>
                         </tr>
                         <tr th:if="${#lists.isEmpty(tools)}">

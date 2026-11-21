@@ -39,9 +39,9 @@ public class InvocationDTOs {
             return new InvocationResponse(
                 inv.getInvocationId(),
                 inv.getEventId(),
-                inv.getAgent().getClientId(),
-                inv.getTool().getName(),
-                inv.getStatus().name(),
+                inv.getAgent() != null ? inv.getAgent().getClientId() : null,
+                inv.getTool() != null ? inv.getTool().getName() : null,
+                inv.getStatus() != null ? inv.getStatus().name() : null,
                 inv.getErrorCode(),
                 inv.getResponsePayloadRedacted(),
                 inv.getLatencyMs(),

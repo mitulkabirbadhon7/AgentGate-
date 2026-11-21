@@ -68,8 +68,8 @@
                                           th:classappend="${audit.eventType == 'COMPLETED' ? 'chip-emerald' : (audit.eventType == 'BLOCKED' ? 'chip-rose' : (audit.eventType == 'APPROVAL_PENDING' ? 'chip-amber' : 'chip-indigo'))}"
                                           th:text="${audit.eventType}">RECEIVED</span>
                                 </td>
-                                <td class="mono" th:text="${audit.actor}">system</td>
-                                <td th:text="${#temporals.format(audit.eventTime, 'HH:mm:ss.SSS')}">12:00:00</td>
+                                <td class="mono" th:text="${audit.actor != null ? audit.actor : 'system'}">system</td>
+                                <td th:text="${audit.eventTime != null ? #temporals.format(audit.eventTime, 'HH:mm:ss.SSS') : '—'}">12:00:00</td>
                             </tr>
                             <tr th:if="${#lists.isEmpty(recentAudits)}">
                                 <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 30px;">
@@ -102,8 +102,8 @@
                                 <td class="mono" th:text="${alert.alertType}">RATE_EXCEEDED</td>
                                 <td>
                                     <span class="chip"
-                                          th:classappend="${alert.severity == 'CRITICAL' ? 'chip-rose' : 'chip-amber'}"
-                                          th:text="${alert.severity}">HIGH</span>
+                                          th:classappend="${alert.severity != null && alert.severity.name() == 'CRITICAL' ? 'chip-rose' : 'chip-amber'}"
+                                          th:text="${alert.severity != null ? alert.severity : 'HIGH'}">HIGH</span>
                                 </td>
                                 <td class="mono" th:text="${alert.triggeredBy != null ? alert.triggeredBy.clientId : 'unknown'}">agent-1</td>
                                 <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" th:text="${alert.details}">Details</td>
