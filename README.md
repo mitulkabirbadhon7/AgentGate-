@@ -643,9 +643,9 @@ The project follows a rigorous, phased implementation lifecycle tracked in [`doc
 
 ### Prerequisites
 - **Java Development Kit (JDK)**: OpenJDK 21 or higher
-- **Build Tool**: Apache Maven 3.9+
-- **Container Engine**: Docker & Docker Compose
+- **Build Tool**: Apache Maven 3.9+ (or use the included `./mvnw`)
 - **Git**
+- *(Optional)* **Docker & Docker Compose**: Only needed if running production PostgreSQL 16 & Redis 7. For local testing and grading, built-in SQLite requires zero external services.
 
 ### 1. Clone the Repository
 ```bash
@@ -653,27 +653,56 @@ git clone https://github.com/mitulkabirbadhon7/AgentGate-.git
 cd AgentGate-
 ```
 
-### 2. Start Infrastructure Dependencies
-Launch PostgreSQL 16 and Redis 7 in detached mode:
+### 2. Choose Execution Mode
+
+#### Option A: Zero-Setup SQLite Mode (Recommended for Grading & Local Testing)
+No Docker daemon, PostgreSQL, or Redis installation required! The gateway automatically provisions the embedded SQLite database at `./data/agentgate.db`.
 ```bash
+# Run with SQLite profile
+./mvnw spring-boot:run -Dspring-boot.run.profiles=sqlite
+```
+
+#### Option B: Production Containerized Mode (PostgreSQL 16 + Redis 7)
+```bash
+# Launch PostgreSQL 16 and Redis 7 in background
 docker compose up -d
-```
 
-Verify services are healthy:
-```bash
+# Verify containers are healthy
 docker compose ps
-```
 
-### 3. Build & Run Application
-```bash
-./mvnw clean compile
+# Run Spring Boot gateway
 ./mvnw spring-boot:run
 ```
 
-Access the endpoints:
-- **MCP Endpoint**: `http://localhost:8080/mcp`
-- **Admin Dashboard**: `http://localhost:8080/admin`
-- **Health Check & Actuator**: `http://localhost:8080/actuator/health`
+### 3. Step-by-Step Verification & Endpoints
+
+Once started, test the application via browser, curl, or PowerShell:
+
+1. **Admin Control Dashboard**:
+   - URL: `http://localhost:8080/admin` (or `/dashboard`)
+   - Default Credentials: `admin` / `admin_gate_change_me`
+   - Features: Real-time telemetry, kill switches, human approval queue, rate limit status, and audit verification.
+
+2. **Actuator Health & Metrics**:
+   ```bash
+   curl http://localhost:8080/actuator/health
+   # Expected: {"status":"UP"}
+   ```
+
+3. **MCP Tool Discovery Endpoint**:
+   ```bash
+   curl -X POST http://localhost:8080/mcp \
+     -H "Content-Type: application/json" \
+     -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+   ```
+
+4. **REST Tool Invocation Endpoint**:
+   ```bash
+   curl -X POST http://localhost:8080/api/v1/invocations \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <AGENT_OR_ADMIN_TOKEN>" \
+     -d '{"toolName":"weather_service","arguments":{"city":"London"}}'
+   ```
 
 ---
 

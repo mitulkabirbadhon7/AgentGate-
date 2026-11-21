@@ -9,20 +9,33 @@ AgentGate is a Zero-Trust Governance Gateway for AI Agent tool calls. It interce
 
 ### Prerequisites
 - Java 21+
-- Apache Maven 3.9+
-- Docker & Docker Compose (optional for local Postgres & Redis, H2/in-memory supported for testing)
+- Apache Maven 3.9+ (or use included `./mvnw`)
+- SQLite (built-in zero-setup file database) OR Docker (optional for PostgreSQL & Redis)
 
-### Step 1: Start AgentGate
+### Step 1: Start AgentGate in Zero-Setup SQLite Mode
+For local evaluation, coursework, and zero manual setup:
 ```bash
 # Clone the repository
 git clone https://github.com/mitulkabirbadhon7/AgentGate-.git
 cd AgentGate-
 
-# Launch application
-mvn spring-boot:run
+# Launch application with SQLite profile (automated, zero external daemon needed)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=sqlite
 ```
-The gateway is available at `http://localhost:8080`.
-The Admin Dashboard is accessible at `http://localhost:8080/dashboard`.
+The gateway automatically creates and configures the SQLite database file at `./data/agentgate.db`.
+
+Access Points:
+- Gateway Base: `http://localhost:8080`
+- Admin Dashboard: `http://localhost:8080/admin` (or `/dashboard`)
+  - Default Admin Credentials: `admin` / `admin_gate_change_me`
+- MCP Gateway Endpoint: `http://localhost:8080/mcp`
+- Health Check: `http://localhost:8080/actuator/health`
+
+Alternatively, to run with PostgreSQL & Redis via Docker:
+```bash
+docker compose up -d
+./mvnw spring-boot:run
+```
 
 ---
 

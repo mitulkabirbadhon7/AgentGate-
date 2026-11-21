@@ -35,6 +35,9 @@ venv/
 target/
 build/
 data/
+*.db
+*.sqlite
+*.sqlite3
 *.mv.db
 *.trace.db
 *.class

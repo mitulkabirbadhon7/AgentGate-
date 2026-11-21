@@ -1,0 +1,27 @@
+spring:
+  config:
+    activate:
+      on-profile: sqlite
+  datasource:
+    url: jdbc:sqlite:./data/agentgate.db
+    driver-class-name: org.sqlite.JDBC
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    show-sql: false
+  flyway:
+    enabled: false
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
+server:
+  port: ${PORT:8080}
+
+logging:
+  level:
+    com.agentgate: INFO
+    org.hibernate.SQL: WARN
