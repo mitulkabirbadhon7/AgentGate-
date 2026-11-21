@@ -181,12 +181,12 @@ class AdminWebRoutesIntegrationTests {
     }
 
     @Test
-    @DisplayName("Admin dashboard page renders successfully")
+    @DisplayName("Admin dashboard and structured home pages render successfully")
     void testDashboardRoute() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("dashboard"))
-                .andExpect(content().string(containsString("Gateway Overview")));
+                .andExpect(view().name("home"))
+                .andExpect(content().string(containsString("AgentGate Governance Control Center")));
 
         mockMvc.perform(get("/admin"))
                 .andExpect(status().isOk())

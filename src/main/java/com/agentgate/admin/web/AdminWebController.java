@@ -96,7 +96,28 @@ public class AdminWebController {
         }
     }
 
-    @GetMapping({"/", "/dashboard", "/admin"})
+    @GetMapping("/")
+    public String home(Model model) {
+        long agentCount = agentRepository.count();
+        long toolCount = toolRepository.count();
+        long serverCount = serverRepository.count();
+        long pendingApprovals = approvalRepository.findByStatusOrderByCreatedAtDesc(ApprovalRequest.ApprovalStatus.PENDING).size();
+        long totalAuditEvents = auditRepository.count();
+        long activeKillSwitches = killSwitchRepository.findByStatus(KillSwitch.KillSwitchStatus.ACTIVE).size();
+        boolean globalWritesBlocked = killSwitchRepository.findByStatus(KillSwitch.KillSwitchStatus.ACTIVE)
+                .stream().anyMatch(ks -> ks.getScope() == KillSwitch.KillSwitchScope.GLOBAL_WRITES);
+
+        model.addAttribute("agentCount", agentCount);
+        model.addAttribute("toolCount", toolCount);
+        model.addAttribute("serverCount", serverCount);
+        model.addAttribute("pendingApprovals", pendingApprovals);
+        model.addAttribute("totalAuditEvents", totalAuditEvents);
+        model.addAttribute("activeKillSwitches", activeKillSwitches);
+        model.addAttribute("globalWritesBlocked", globalWritesBlocked);
+        return "home";
+    }
+
+    @GetMapping({"/dashboard", "/admin"})
     public String dashboard(Model model) {
         long agentCount = agentRepository.count();
         long toolCount = toolRepository.count();
