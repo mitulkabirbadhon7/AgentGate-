@@ -90,6 +90,8 @@ public class AgentAuthenticationFilter extends OncePerRequestFilter {
 
     private boolean isPublicEndpoint(String path) {
         return path.startsWith("/actuator") ||
+               path.startsWith("/api/v1/auth") ||
+               path.startsWith("/api/v1/mock") ||
                path.startsWith("/css") ||
                path.startsWith("/js") ||
                path.startsWith("/images") ||

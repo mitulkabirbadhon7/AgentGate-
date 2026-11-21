@@ -19,22 +19,26 @@ For local evaluation, coursework, and zero manual setup:
 git clone https://github.com/mitulkabirbadhon7/AgentGate-.git
 cd AgentGate-
 
-# Launch application with SQLite profile (automated, zero external daemon needed)
-./mvnw spring-boot:run -Dspring-boot.run.profiles=sqlite
+# Launch application (defaults to SQLite zero-setup profile)
+./mvnw spring-boot:run
 ```
-The gateway automatically creates and configures the SQLite database file at `./data/agentgate.db`.
+*(On Windows PowerShell, if explicitly specifying the profile flag: `./mvnw spring-boot:run "-Dspring-boot.run.profiles=sqlite"`)*
+
+The gateway automatically creates and configures the SQLite database file at `./data/agentgate.db` and bootstraps default governance demo data (`demo-agent`, mock tools, baseline policy).
 
 Access Points:
 - Gateway Base: `http://localhost:8080`
 - Admin Dashboard: `http://localhost:8080/admin` (or `/dashboard`)
   - Default Admin Credentials: `admin` / `admin_gate_change_me`
+- Health Check: `http://localhost:8080/actuator/health` (Returns `{"status":"UP"}`)
+- Auth Token API: `http://localhost:8080/api/v1/auth/token?clientId=demo-agent`
 - MCP Gateway Endpoint: `http://localhost:8080/mcp`
-- Health Check: `http://localhost:8080/actuator/health`
+- REST Invocations Endpoint: `http://localhost:8080/api/v1/invocations`
 
 Alternatively, to run with PostgreSQL & Redis via Docker:
 ```bash
 docker compose up -d
-./mvnw spring-boot:run
+./mvnw spring-boot:run "-Dspring-boot.run.profiles=postgres"
 ```
 
 ---

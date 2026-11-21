@@ -2,9 +2,18 @@ spring:
   config:
     activate:
       on-profile: sqlite
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
   datasource:
     url: jdbc:sqlite:./data/agentgate.db
     driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 1
+      connection-timeout: 30000
+      idle-timeout: 60000
   jpa:
     database-platform: org.hibernate.community.dialect.SQLiteDialect
     hibernate:
@@ -13,10 +22,11 @@ spring:
     show-sql: false
   flyway:
     enabled: false
-  data:
+
+management:
+  health:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:localhost}
-      port: ${SPRING_DATA_REDIS_PORT:6379}
+      enabled: false
 
 server:
   port: ${PORT:8080}

@@ -655,12 +655,13 @@ cd AgentGate-
 
 ### 2. Choose Execution Mode
 
-#### Option A: Zero-Setup SQLite Mode (Recommended for Grading & Local Testing)
-No Docker daemon, PostgreSQL, or Redis installation required! The gateway automatically provisions the embedded SQLite database at `./data/agentgate.db`.
+#### Option A: Zero-Setup SQLite Mode (Default — Recommended for Grading & Local Testing)
+No Docker daemon, PostgreSQL, or Redis installation required! The gateway automatically provisions the embedded SQLite database at `./data/agentgate.db` and bootstraps default governance demo data.
 ```bash
-# Run with SQLite profile
-./mvnw spring-boot:run -Dspring-boot.run.profiles=sqlite
+# Run Spring Boot (defaults to SQLite automated mode)
+./mvnw spring-boot:run
 ```
+*(On Windows PowerShell, if explicitly specifying the profile flag, wrap in quotes: `./mvnw spring-boot:run "-Dspring-boot.run.profiles=sqlite"`)*
 
 #### Option B: Production Containerized Mode (PostgreSQL 16 + Redis 7)
 ```bash
@@ -670,8 +671,8 @@ docker compose up -d
 # Verify containers are healthy
 docker compose ps
 
-# Run Spring Boot gateway
-./mvnw spring-boot:run
+# Run Spring Boot gateway with postgres profile
+./mvnw spring-boot:run "-Dspring-boot.run.profiles=postgres"
 ```
 
 ### 3. Step-by-Step Verification & Endpoints
@@ -686,23 +687,35 @@ Once started, test the application via browser, curl, or PowerShell:
 2. **Actuator Health & Metrics**:
    ```bash
    curl http://localhost:8080/actuator/health
-   # Expected: {"status":"UP"}
+   # Expected: {"status":"UP","groups":["liveness","readiness"]}
    ```
 
-3. **MCP Tool Discovery Endpoint**:
+3. **Acquire JWT Bearer Token (Bootstrap Demo Agent)**:
    ```bash
+   curl -s http://localhost:8080/api/v1/auth/token?clientId=demo-agent
+   # Returns: {"success":true,"data":{"access_token":"eyJhbGciOi...","token_type":"Bearer","expires_in":3600}}
+   ```
+
+4. **MCP Tool Discovery Endpoint**:
+   ```bash
+   # Supply the Bearer token acquired above:
    curl -X POST http://localhost:8080/mcp \
      -H "Content-Type: application/json" \
+     -H "Authorization: Bearer <ACCESS_TOKEN>" \
      -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
    ```
 
-4. **REST Tool Invocation Endpoint**:
+5. **REST Tool Invocation Endpoint**:
    ```bash
    curl -X POST http://localhost:8080/api/v1/invocations \
      -H "Content-Type: application/json" \
-     -H "Authorization: Bearer <AGENT_OR_ADMIN_TOKEN>" \
+     -H "Authorization: Bearer <ACCESS_TOKEN>" \
      -d '{"toolName":"weather_service","arguments":{"city":"London"}}'
+   # Returns governed result: {"success":true,"data":{"status":"EXECUTED", ...}}
    ```
+
+6. **Verify Cryptographic SHA-256 Audit Trail**:
+   Visit `http://localhost:8080/audit` in your browser to inspect the tamper-evident cryptographic hash chain recording the invocation.
 
 ---
 

@@ -1,6 +1,9 @@
 spring:
   application:
     name: agentgate
+  profiles:
+    default: sqlite
+    active: ${SPRING_PROFILES_ACTIVE:sqlite}
   threads:
     virtual:
       enabled: true
