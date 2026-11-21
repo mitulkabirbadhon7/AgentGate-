@@ -181,19 +181,19 @@ class AdminWebRoutesIntegrationTests {
     }
 
     @Test
-    @DisplayName("Animated home showcase page renders successfully")
-    void testIndexRoute() throws Exception {
-        mockMvc.perform(get("/"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("index"))
-                .andExpect(content().string(containsString("Zero-Trust AI Gateway")))
-                .andExpect(content().string(containsString("Live Gateway Invocation Playground")));
-    }
-
-    @Test
     @DisplayName("Admin dashboard page renders successfully")
     void testDashboardRoute() throws Exception {
+        mockMvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("dashboard"))
+                .andExpect(content().string(containsString("Gateway Overview")));
+
         mockMvc.perform(get("/admin"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("dashboard"))
+                .andExpect(content().string(containsString("Gateway Overview")));
+
+        mockMvc.perform(get("/dashboard"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("dashboard"))
                 .andExpect(content().string(containsString("Gateway Overview")));
