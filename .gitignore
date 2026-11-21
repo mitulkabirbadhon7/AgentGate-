@@ -21,6 +21,7 @@ credentials/
 
 # Python & Scratch Artifacts
 *.py
+!integrations/unsloth/*.py
 *.pyc
 *.pyo
 __pycache__/
