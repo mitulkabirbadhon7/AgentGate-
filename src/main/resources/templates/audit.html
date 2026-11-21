@@ -14,8 +14,8 @@
              th:style="${verificationResult.valid ? 'border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08);' : 'border-color: rgba(244, 63, 94, 0.4); background: rgba(244, 63, 94, 0.08);'}">
             <div class="panel-header" style="background: transparent;">
                 <div class="panel-title" th:style="${verificationResult.valid ? 'color: var(--accent-emerald);' : 'color: var(--accent-rose);'}">
-                    <span th:if="${verificationResult.valid}">✓ CRYPTOGRAPHIC AUDIT VERIFICATION PASSED</span>
-                    <span th:if="${!verificationResult.valid}">✗ AUDIT INTEGRITY VIOLATION DETECTED</span>
+                    <span th:if="${verificationResult.valid}">CRYPTOGRAPHIC AUDIT VERIFICATION PASSED</span>
+                    <span th:if="${!verificationResult.valid}">AUDIT INTEGRITY VIOLATION DETECTED</span>
                 </div>
                 <span class="mono" style="font-size: 0.85rem;" th:text="'Verified ' + ${verificationResult.eventsChecked} + ' chained events'">0 events</span>
             </div>
@@ -29,7 +29,7 @@
                 <div class="panel-title">Cryptographic Append-Only Audit Trail</div>
                 <div class="panel-actions">
                     <a th:href="@{/audit?verify=true}" class="btn btn-primary btn-sm">
-                        🛡 Verify Hash Chain Integrity
+                        Verify Hash Chain Integrity
                     </a>
                 </div>
             </div>

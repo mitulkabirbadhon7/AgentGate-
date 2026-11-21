@@ -14,7 +14,7 @@
 
 ## 2. Executive Summary & Vision
 
-Autonomous AI agents (powered by Claude, GPT-4, Gemini, and open-source models) increasingly possess the autonomy to invoke tools, interact with databases, trigger financial transactions, and modify production records via protocols such as the **Model Context Protocol (MCP)** and REST APIs.
+Autonomous AI agents (powered by leading large language models and open-source models) increasingly possess the autonomy to invoke tools, interact with databases, trigger financial transactions, and modify production records via protocols such as the **Model Context Protocol (MCP)** and REST APIs.
 
 Without runtime governance, deploying autonomous agents exposes organizations to catastrophic risks:
 1. **Prompt Injection & Tool Hijacking**: Malicious users manipulating agent prompts to invoke unauthorized tools.
